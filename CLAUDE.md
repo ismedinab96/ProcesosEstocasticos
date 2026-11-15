@@ -150,3 +150,4 @@ Ver `AGENTS.md` §2 para el esquema completo campo a campo.
 - `pyproject.toml` agrega `matplotlib` a dependencias de desarrollo para notebooks.
 - Verificación: `pytest` 81 passed; `ruff` y `black --check` limpios (notebooks omitidos por black sin extra jupyter); `node --check` OK; `docs/informe_final.pdf` compilado (6 páginas, 267.545 bytes).
 - Compuerta 4 aprobada explícitamente por el usuario; proyecto cerrado en su alcance académico definido.
+- Preparación de despliegue: `render.yaml` define un sitio estático desde `dashboard/`; `dashboard/data.js` se versiona y `dashboard/data.json` sigue ignorado.

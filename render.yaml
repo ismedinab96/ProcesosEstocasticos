@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: asfi-alerta-temprana
+    runtime: static
+    buildCommand: "true"
+    staticPublishPath: ./dashboard
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

@@ -14,9 +14,8 @@ data/raw/*
 data/interim/
 data/processed/
 
-# Dashboard generado
+# Dashboard generado: data.js se versiona para el despliegue estático en Render
 dashboard/data.json
-dashboard/data.js
 
 # Sistema
 .DS_Store

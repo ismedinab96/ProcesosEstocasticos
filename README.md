@@ -54,6 +54,18 @@ backtesting, matriz de Markov interactiva con simulador \(P^h\), tabla de alerta
 glosario KaTeX. Chart.js, Motion, Tailwind y KaTeX se cargan por CDN; si no hay
 internet, los datos siguen locales pero pueden faltar estilos o fórmulas.
 
+## Despliegue en Render
+
+El repositorio incluye `render.yaml`, que define un **sitio estático** publicado desde
+`dashboard/`. El despliegue no ejecuta el pipeline: usa `dashboard/data.js` ya generado.
+
+1. En Render, elegir **New > Blueprint** y conectar el repositorio de GitHub.
+2. Render detecta `render.yaml` y crea el sitio `asfi-alerta-temprana`.
+3. El sitio queda disponible en `https://asfi-alerta-temprana.onrender.com`.
+
+Antes de desplegar, `dashboard/data.js` debe estar incluido en el repositorio. El archivo
+`dashboard/data.json` sigue siendo un artefacto local ignorado por Git.
+
 ## Notebooks y documentación
 
 ```bash
