@@ -1,0 +1,244 @@
+# =============================================================================
+# Configuración del Sistema de Alerta Temprana Estocástica (ASFI Bolivia)
+# =============================================================================
+
+general:
+  zona_horaria: "America/La_Paz"
+  moneda: "BOB"
+  unidad_base: "miles_de_bolivianos"
+  meses_minimos_serie: 60
+  meses_pronostico: 12
+  meses_ventana_backtest: 12
+  # Si es true, el pipeline exige que los datos provengan de data/raw/ reales.
+  # El modo demo SIEMPRE activa el banner rojo en el dashboard.
+  modo_demo_por_defecto: false
+
+scraping:
+  base_url: "https://www.asfi.gob.bo"
+  # Rutas validadas en el reconocimiento del 2026-11-14 (no adivinar).
+  secciones:
+    estados_financieros: "/pb/estados-financieros"
+    estadisticas_intermediacion: "/pb/estadisticas-intermediacion-financiera"
+  user_agent: "ASFI-AlertaTemprana/0.1 (proyecto academico; contacto: ejemplo@correo.bo)"
+  rate_limit_segundos: 2.5
+  reintentos: 4
+  backoff_factor: 2.0
+  respetar_robots: true
+  directorio_cache: "data/raw"
+  directorio_manual: "data/raw"
+  timeout_segundos: 45
+
+exploracion:
+  # Fuentes verificadas durante la Compuerta 1 (2026-11-14). Las plantillas
+  # provienen del JS público de ASFI (bmu-bol.js), no de rutas inventadas.
+  fuentes_verificadas:
+    - nombre: "Bancos Múltiples — Estados Financieros"
+      url_template: "https://www.asfi.gob.bo/sites/default/files/estadisticaif/bancos_multiples/{anio}/{mes}/{anio}{mes}_BMU_EstadosFinancieros.zip"
+      hallada_en: "https://www.asfi.gob.bo/sites/default/files/js_/bmu-bol.js"
+      sondas: [["2014", "12"], ["2015", "12"], ["2020", "12"], ["2022", "12"], ["2023", "12"], ["2024", "12"], ["2025", "06"], ["2025", "12"]]
+    - nombre: "Bancos Múltiples — Indicadores Financieros"
+      url_template: "https://www.asfi.gob.bo/sites/default/files/estadisticaif/bancos_multiples/{anio}/{mes}/{anio}{mes}_BMU_IndicadoresFinancieros.zip"
+      hallada_en: "https://www.asfi.gob.bo/sites/default/files/js_/bmu-bol.js"
+      sondas: [["2023", "12"], ["2024", "12"], ["2025", "12"]]
+    - nombre: "Bancos Múltiples — Estados Financieros Evolutivos"
+      url_template: "https://www.asfi.gob.bo/sites/default/files/estadisticaif/bancos_multiples/{anio}/{mes}/{anio}{mes}_BMU_EstadosFinancieros_Evolutivo.zip"
+      hallada_en: "https://www.asfi.gob.bo/sites/default/files/js_/bmu-bol.js"
+      sondas: [["2023", "12"], ["2024", "12"], ["2025", "12"]]
+    - nombre: "Bancos de Desarrollo Productivo — Estados Financieros resumidos"
+      url_template: "https://www.asfi.gob.bo/sites/default/files/2025-08/{anio}{mes}_BDR_EstadosFinancieros.xls"
+      hallada_en: "https://www.asfi.gob.bo/la/estados-financieros-resumidos-gestion-2024"
+      sondas: [["2024", "01"], ["2024", "12"]]
+
+bancos:
+  # Catálogo canónico alineado con las siglas oficiales de ASFI
+  # (fuente: "Siglas de Entidades de Intermediación Financiera", PDF ASFI).
+  # `codigo_asfi` identifica las columnas de los archivos mensuales BMU.
+  - id: "bisa"
+    nombre: "Banco BISA S.A."
+    codigo_asfi: "BIS"
+    tipo: "Multiple"
+    variantes: ["BANCO BISA S.A.", "BISA", "BCO. BISA", "BCO BISA S.A.", "BIS"]
+  - id: "bnb"
+    nombre: "Banco Nacional de Bolivia S.A."
+    codigo_asfi: "BNB"
+    tipo: "Multiple"
+    variantes: ["BANCO NACIONAL DE BOLIVIA S.A.", "BNB", "BCO. NACIONAL DE BOLIVIA"]
+  - id: "bun"
+    nombre: "Banco Unión S.A."
+    codigo_asfi: "BUN"
+    tipo: "Multiple"
+    variantes: ["BANCO UNION S.A.", "BUN", "BANCO UNIÓN"]
+  - id: "bme"
+    nombre: "Banco Mercantil Santa Cruz S.A."
+    codigo_asfi: "BME"
+    tipo: "Multiple"
+    variantes: ["BANCO MERCANTIL SANTA CRUZ S.A.", "BMSC", "MERCANTIL SANTA CRUZ", "BME"]
+  - id: "bcr"
+    nombre: "Banco de Crédito de Bolivia S.A."
+    codigo_asfi: "BCR"
+    tipo: "Multiple"
+    variantes: ["BANCO DE CREDITO DE BOLIVIA S.A.", "BCR", "BCO. DE CREDITO"]
+  - id: "bga"
+    nombre: "Banco Ganadero S.A."
+    codigo_asfi: "BGA"
+    tipo: "Multiple"
+    variantes: ["BANCO GANADERO S.A.", "BG", "BCO. GANADERO", "BGA"]
+  - id: "bec"
+    nombre: "Banco Económico S.A."
+    codigo_asfi: "BEC"
+    tipo: "Multiple"
+    variantes: ["BANCO ECONOMICO S.A.", "BEC", "BCO. ECONOMICO"]
+  - id: "bsol"
+    nombre: "Banco Solidario S.A."
+    codigo_asfi: "BSO"
+    tipo: "Multiple"
+    variantes: ["BANCO SOLIDARIO S.A.", "SOLIDARIO", "BCO. SOLIDARIO", "BSO"]
+  - id: "bna"
+    nombre: "Banco de la Nación Argentina"
+    codigo_asfi: "BNA"
+    tipo: "Multiple"
+    variantes: ["BANCO DE LA NACION ARGENTINA", "BNA"]
+  - id: "bfie"
+    nombre: "Banco para el Fomento de Iniciativas Económicas S.A. (FIE)"
+    codigo_asfi: "BIE"
+    tipo: "Multiple"
+    variantes: ["BANCO FIE S.A.", "FIE", "BCO. FIE", "BIE"]
+  - id: "bfort"
+    nombre: "Banco Fortaleza S.A."
+    codigo_asfi: "BFO"
+    tipo: "Multiple"
+    variantes: ["BANCO FORTALEZA S.A.", "FORTALEZA", "BFO"]
+  - id: "bpro"
+    nombre: "Banco Prodem S.A."
+    codigo_asfi: "BPR"
+    tipo: "Multiple"
+    variantes: ["BANCO PRODEM S.A.", "PRODEM", "BPR"]
+
+cuentas_puc:
+  # Mapeo canónico cuenta interna -> posibles etiquetas en EEFF de ASFI.
+  activo_total:
+    - "Activo Total"
+    - "TOTAL ACTIVO"
+    - "TOTAL ACTIVO"
+  pasivo_total:
+    - "Pasivo Total"
+    - "TOTAL PASIVO"
+  patrimonio_total:
+    - "Patrimonio Total"
+    - "TOTAL PATRIMONIO"
+    - "TOTAL PATRIMONIO NETO"
+  cartera_bruta:
+    - "Cartera Bruta"
+    - "CART. BRUTA"
+    - "CARTERA DE CREDITOS"
+  cartera_mora:
+    - "Cartera en Mora"
+    - "CART. EN MORA"
+    - "CARTERA VENCIDA"
+  prevision_incobrables:
+    - "Prevision para Incobrables"
+    - "PREVISION CARTERA"
+    - "PREVISIONES"
+  disponibilidades:
+    - "Disponibilidades"
+    - "DISPONIBILIDADES"
+  inversiones_temporarias:
+    - "Inversiones Temporarias"
+    - "INVERSIONES TEMPORARIAS"
+  obligaciones_corto_plazo:
+    - "Obligaciones a Corto Plazo"
+    - "OBLIGACIONES A CORTO PLAZO"
+  utilidad_neta:
+    - "Utilidad Neta"
+    - "UTILIDAD NETA"
+    - "RESULTADO NETO"
+  depositos:
+    - "Depósitos"
+    - "DEPOSITOS"
+    - "OBLIGACIONES CON EL PUBLICO"
+
+indicadores:
+  - id: "mora"
+    nombre: "Índice de Morosidad"
+    formula_latex: "\\frac{\\text{Cartera en Mora}}{\\text{Cartera Bruta}}"
+    unidad: "%"
+    direccion_riesgo: "ascendente"
+    numerador: "cartera_mora"
+    denominador: "cartera_bruta"
+  - id: "cobertura"
+    nombre: "Cobertura de Previsiones"
+    formula_latex: "\\frac{\\text{Previsión para Incobrables}}{\\text{Cartera en Mora}}"
+    unidad: "%"
+    direccion_riesgo: "descendente"
+    numerador: "prevision_incobrables"
+    denominador: "cartera_mora"
+  - id: "liquidez"
+    nombre: "Liquidez"
+    formula_latex: "\\frac{\\text{Disponibilidades} + \\text{Inversiones Temporarias}}{\\text{Obligaciones a Corto Plazo}}"
+    unidad: "%"
+    direccion_riesgo: "descendente"
+    especial: "liquidez"
+  - id: "roa"
+    nombre: "ROA"
+    formula_latex: "\\frac{\\text{Utilidad Neta Anualizada}}{\\text{Activo Promedio 12m}}"
+    unidad: "%"
+    direccion_riesgo: "descendente"
+    especial: "roa"
+  - id: "roe"
+    nombre: "ROE"
+    formula_latex: "\\frac{\\text{Utilidad Neta Anualizada}}{\\text{Patrimonio Promedio 12m}}"
+    unidad: "%"
+    direccion_riesgo: "descendente"
+    especial: "roe"
+  - id: "crec_cartera"
+    nombre: "Crecimiento Interanual de Cartera"
+    formula_latex: "\\frac{\\text{Cartera}_t - \\text{Cartera}_{t-12}}{\\text{Cartera}_{t-12}}"
+    unidad: "%"
+    direccion_riesgo: "ascendente"
+    especial: "crecimiento_cartera"
+  - id: "crec_depositos"
+    nombre: "Crecimiento Interanual de Depósitos"
+    formula_latex: "\\frac{\\text{Depósitos}_t - \\text{Depósitos}_{t-12}}{\\text{Depósitos}_{t-12}}"
+    unidad: "%"
+    direccion_riesgo: "descendente"
+    especial: "crecimiento_depositos"
+
+markov:
+  estados: ["Baja", "Media", "Alta", "Crítica"]
+  # Umbrales sobre el Índice de Morosidad (fracción, no porcentaje).
+  umbrales: [0.015, 0.025, 0.040]
+  laplace_alpha: 0.001
+  horizontes_meses: [1, 3, 6, 12]
+
+sarima:
+  s: 12
+  grilla:
+    p: [0, 1, 2]
+    d: [0, 1]
+    q: [0, 1, 2]
+    P: [0, 1]
+    D: [0, 1]
+    Q: [0, 1]
+  enforce_stationarity: false
+  enforce_invertibility: false
+  maxiter: 50
+  top_n_modelos: 3
+  n_jobs: -1
+  nivel_ic: [0.80, 0.95]
+
+alertas:
+  banda_ic: 0.95
+  z_vigilancia: 2.0
+  z_alerta: 3.0
+  racha_meses: 3
+  prob_critico_3m_umbral: 0.25
+  cusum_banda: 5.0
+  severidades:
+    vigilancia: "vigilancia"
+    alerta: "alerta"
+    critica: "critica"
+
+export:
+  salida_json: "dashboard/data.json"
+  salida_js: "dashboard/data.js"
+  validar_esquema: true

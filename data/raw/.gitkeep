@@ -1,0 +1,2 @@
+Este directorio es inmutable. Los archivos se registran en manifest.csv.
+Convención: {AAAA}/{MM}/{tipo_entidad}_{archivo}.{ext}

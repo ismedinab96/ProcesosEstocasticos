@@ -1,0 +1,245 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+
+\hypersetup{
+  pdftitle={Sistema de Alerta Temprana Estocastica sobre EEFF Bancarios ASFI},
+  pdfauthor={Proyecto de Procesos Estocasticos},
+  pdfsubject={Desviaciones estocasticas y anomalias en indicadores financieros}
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+
+\title{
+  \vspace{-1.2cm}
+  \textbf{Sistema de Alerta Temprana Estocástica}\\[0.25em]
+  \large Desviaciones y anomalías en indicadores financieros de bancos múltiples de Bolivia
+}
+\author{Proyecto de Procesos Estocásticos\\ASFI Bolivia}
+\date{\today}
+
+\begin{document}
+\sloppy
+
+\maketitle
+
+\begin{abstract}
+Este trabajo presenta un pipeline reproducible para analizar desviaciones estocásticas en indicadores financieros de bancos múltiples de Bolivia, utilizando estados financieros mensuales publicados por la Autoridad de Supervisión del Sistema Financiero (ASFI). La muestra comprende 84 meses continuos, de enero de 2019 a diciembre de 2025, y 12 entidades, con 1.008 observaciones banco-mes. El sistema combina pruebas de estacionariedad ADF y KPSS, regresión con errores estándar HAC, modelos SARIMA con backtesting walk-forward, cadenas de Markov de cuatro estados para la mora y un motor determinista de alertas basado en bandas de predicción, residuos estandarizados, rachas, saltos de estado y CUSUM. Los resultados se comunican mediante un dashboard estático y materiales de defensa oral. El alcance es descriptivo y académico: el sistema mide si una observación se aleja del proceso generador de datos estimado; no predice quiebras ni insolvencias bancarias.
+\end{abstract}
+
+\textbf{Palabras clave:} procesos estocásticos, estacionariedad, SARIMA, cadenas de Markov, alerta temprana, ASFI.
+
+\section{Introducción}
+
+La información financiera mensual de los bancos permite construir series de tiempo relativamente largas para indicadores de mora, cobertura, liquidez, rentabilidad y crecimiento. Una pregunta académicamente relevante es si una observación reciente resulta compatible con el proceso generador de datos estimado con la historia disponible. Este trabajo aborda esa pregunta mediante un conjunto de técnicas de series de tiempo y procesos estocásticos, con énfasis en la transparencia metodológica y en la reproducibilidad.
+
+El sistema no busca pronosticar la quiebra de una entidad. Un valor atípico puede deberse a un cambio de política contable, a una reclasificación, a un choque macroeconómico o a un error de reporte. Por ello, las salidas se formulan como \emph{desviaciones estocásticas y anomalías}, no como sentencias sobre la solvencia.
+
+Los objetivos específicos son:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item construir un panel contable validado y trazable a partir de archivos públicos de ASFI;
+  \item calcular indicadores comparables, incluyendo la desacumulación de flujos para ROA y ROE;
+  \item estimar y diagnosticar un proceso SARIMA por serie banco-indicador;
+  \item modelar la mora como una cadena de Markov de cuatro estados;
+  \item generar alertas deterministas y explicables;
+  \item comunicar los resultados en un dashboard estático y en notebooks ejecutables.
+\end{enumerate}
+
+\section{Datos}
+
+\subsection{Fuente y cobertura}
+
+La fuente principal son los Estados Financieros mensuales de Bancos Múltiples publicados por ASFI. La ruta de descarga fue verificada en el portal institucional y se documenta en \texttt{docs/exploracion\_asfi.md}. La muestra utilizada contiene 84 meses continuos (2019-01 a 2025-12), 12 bancos y 1.008 observaciones banco-mes, sin huecos.
+
+Cada archivo descargado se registra en \texttt{data/raw/manifest.csv} con URL, ruta local, fecha, SHA-256, tamaño y estado. El pipeline admite carga manual de archivos en \texttt{data/raw/} y un modo sintético explícito con el flag \texttt{--demo}, que activa el banner fijo \texttt{MODO DEMOSTRACIÓN — DATOS SINTÉTICOS}.
+
+\subsection{Validación contable}
+
+Para cada registro se verifica la identidad fundamental:
+\[
+\left| \text{Activo}_t - \left(\text{Pasivo}_t + \text{Patrimonio}_t\right) \right| \le \epsilon,
+\]
+con \(\epsilon=1\) miles de bolivianos. En la muestra real se obtuvieron 0 fallos y una diferencia máxima de 0,001620 miles de BOB. También se controlan duplicados, valores negativos imposibles y cambios de unidad de medida.
+
+Los huecos aislados de hasta dos meses pueden interpolarse linealmente. Los huecos mayores truncan la serie al tramo continuo más reciente. Una serie con menos de 60 observaciones se marca como insuficiente y no se modela.
+
+\section{Metodología}
+
+\subsection{Indicadores financieros}
+
+Se calculan siete indicadores: mora, cobertura de previsiones, liquidez, ROA, ROE y crecimiento interanual de cartera y depósitos. Para los indicadores de flujo, la utilidad neta acumulada se desacumula:
+\[
+\Delta U_t = U_t - U_{t-1}, \qquad t > \text{enero},
+\]
+y se anualiza con una suma móvil de 12 meses. ROA y ROE dividen esa utilidad anualizada entre el activo o patrimonio promedio de 12 meses. Las primeras observaciones se reportan como faltantes y no se imputan.
+
+\subsection{Estacionariedad}
+
+Se aplican ADF y KPSS de forma complementaria. El ADF contrasta \(H_0\): raíz unitaria; el KPSS contrasta \(H_0\): estacionariedad. La lectura conjunta permite clasificar cada serie como estacionaria, raíz unitaria pura, estacionaria en tendencia o inconclusa. También se calculan ACF y PACF hasta 24 rezagos, antes y después de diferenciar.
+
+En la muestra se obtuvieron 44 series inconclusas, 35 con raíz unitaria pura, 4 estacionarias y 1 estacionaria en tendencia. La categoría inconclusa se conserva porque refleja rechazos simultáneos o señales mixtas en series cortas con estacionalidad marcada.
+
+\subsection{Regresión con errores HAC}
+
+Se estima por MCO:
+\[
+y_t = \beta_0 + \beta_1 t + \beta_2 t^2 + \sum_{m=2}^{12}\gamma_m D_{mt} + \varepsilon_t,
+\]
+donde \(D_{mt}\) son 11 dummies mensuales. Los errores estándar son HAC (Newey-West), robustos a autocorrelación y heterocedasticidad. Se reportan \(R^2\) ajustado, Durbin-Watson, Ljung-Box y ARCH-LM. La regresión se utiliza como diagnóstico, no como modelo de pronóstico.
+
+\subsection{SARIMA y backtesting}
+
+El modelo SARIMA se escribe como:
+\[
+\phi(B)\Phi(B^{12})(1-B)^d(1-B^{12})^D y_t
+=
+\theta(B)\Theta(B^{12})\varepsilon_t.
+\]
+La grilla se acota a \(p,q\in\{0,1,2\}\), \(d\in\{0,1\}\), \(P,Q\in\{0,1\}\), \(D\in\{0,1\}\), \(s=12\), con \(p+q\le 3\) y \(P+Q\le 1\). Se selecciona por AIC y se reporta el top 3. El pronóstico es a 12 meses con bandas al 80 \% y 95 \%.
+
+El backtesting usa ventana expansiva sobre los últimos 12 meses. Se compara el RMSE, MAE y sMAPE contra Naive y Seasonal Naive. En la muestra, el SARIMA superó a Naive en 26 de 84 series; los 58 casos restantes se reportan con \texttt{supera\_baseline = false}, sin ocultar el resultado.
+
+\subsection{Cadena de Markov}
+
+La mora se discretiza en cuatro estados: Baja, Media, Alta y Crítica, con umbrales de 1,5 \%, 2,5 \% y 4,0 \%. La matriz de transición se estima con suavizado de Laplace:
+\[
+P_{ij} = \frac{n_{ij} + \alpha}{\sum_{j=1}^{4} n_{ij} + 4\alpha},
+\qquad \alpha = 10^{-3}.
+\]
+Se calculan la distribución estacionaria \(\boldsymbol{\pi}=\boldsymbol{\pi}\mathbf{P}\), el tiempo medio de permanencia \(1/(1-P_{ii})\), las probabilidades de alcanzar Crítica a 1, 3, 6 y 12 meses y una prueba de razón de verosimilitud para orden 1 frente a orden 2.
+
+\subsection{Motor de alertas}
+
+El motor activa señales deterministas:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item observación fuera de la banda de predicción al 95 \% de un paso;
+  \item residuo estandarizado \(|z_t|>2\) o \(|z_t|>3\);
+  \item racha de deterioro de al menos 3 meses con cambio acumulado mínimo de 0,5 desviaciones estándar;
+  \item salto ascendente de estado markoviano o probabilidad de Crítica a 3 meses por encima del umbral;
+  \item CUSUM sobre residuos fuera de una banda de control de 5,0.
+\end{enumerate}
+
+La severidad se asigna de forma determinista: vigilancia, alerta o crítica. Cada alerta incluye una explicación en lenguaje natural y las señales activadas.
+
+\section{Resultados}
+
+\subsection{Estacionariedad y modelos}
+
+Se modelaron 84 de 84 series. Los órdenes SARIMA más frecuentes fueron \((0,1,2)(0,1,1)_{12}\) en 25 series, \((0,1,2)(0,0,1)_{12}\) en 12 y \((1,1,2)(0,0,1)_{12}\) en 9. El backtesting walk-forward mostró que el SARIMA supera a Naive en 26 de 84 series.
+
+\subsection{Markov}
+
+La prueba de orden 1 frente a orden 2 no rechazó el orden 1 en ningún banco de la muestra. El caso \texttt{bfort} presenta una distribución estacionaria con aproximadamente 99,5 \% de masa en el estado Crítica y una probabilidad de Crítica a 3 meses de 0,9997. Este resultado describe una mora estructuralmente alta; no constituye una predicción de insolvencia.
+
+\subsection{Alertas}
+
+Se generaron 1.073 alertas: 268 críticas, 213 de alerta y 592 de vigilancia. Las señales más frecuentes fueron racha de deterioro (651), fuera de banda al 95 \% (275), residuo \(|z|\ge 2\) (265), CUSUM (237), residuo \(|z|\ge 3\) (150) y salto de estado (59). En los últimos tres meses de la muestra se concentran 18 alertas.
+
+\begin{table}[H]
+\centering
+\caption{Resumen de semáforos por banco}
+\begin{tabular}{lcccc}
+\toprule
+Semáforo & Bancos & Cantidad \\
+\midrule
+Rojo & bisa, bun, bec, bsol, bfort & 5 \\
+Naranja & bcr & 1 \\
+Amarillo & bga, bpro & 2 \\
+Verde & bnb, bme, bna, bfie & 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discusión}
+
+El valor del sistema está en la trazabilidad: cada resultado puede reproducirse desde el archivo original hasta la alerta. La combinación de pruebas de estacionariedad, regresión HAC, SARIMA, Markov y CUSUM ofrece varias perspectivas sobre la misma serie, pero no elimina la incertidumbre. La categoría \emph{inconclusa} y los casos en que el SARIMA no supera al Naive son parte del resultado, no un defecto que deba esconderse.
+
+La interpretación económica exige cautela. Una mora alta puede ser estructural, mientras que una racha de deterioro puede reflejar un cambio de composición de cartera. El sistema señala desviaciones; la explicación causal requiere información adicional.
+
+\section{Limitaciones}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item La banda de un paso usa una aproximación gaussiana basada en la desviación estándar de los residuos, no una simulación completa de la incertidumbre de parámetros.
+  \item La muestra de 84 meses es suficiente para estacionalidad anual, pero limita la potencia de las pruebas de normalidad y de orden markoviano.
+  \item Los indicadores dependen de la calidad, reclasificaciones y cambios de criterio contable de ASFI.
+  \item Los cambios estructurales no se distinguen automáticamente de las anomalías.
+  \item El dashboard requiere conexión para cargar sus dependencias CDN; los datos son locales.
+  \item El sistema no predice quiebras ni insolvencias. Cualquier uso en ese sentido excede el alcance metodológico.
+\end{itemize}
+
+\section{Conclusiones}
+
+Se construyó un sistema reproducible de alerta temprana estocástica sobre estados financieros bancarios de ASFI. El pipeline integra validación contable, ingeniería de indicadores, diagnóstico de estacionariedad, regresión HAC, SARIMA con backtesting, cadenas de Markov y un motor determinista de alertas. Los resultados se exportan a un contrato validado y se presentan en un dashboard estático, notebooks ejecutables y documentación académica.
+
+La principal contribución es metodológica: mostrar cómo medir desviaciones de un proceso generador de datos sin convertir una señal estadística en una afirmación sobre la supervivencia de una entidad financiera.
+
+\begin{thebibliography}{9}
+
+\bibitem{dickey1979}
+Dickey, D. A. y Fuller, W. A. (1979).
+\emph{Distribution of the Estimators for Autoregressive Time Series with a Unit Root}.
+Journal of the American Statistical Association, 74(366), 427--431.
+
+\bibitem{kwiatkowski1992}
+Kwiatkowski, D., Phillips, P. C. B., Schmidt, P. y Shin, Y. (1992).
+\emph{Testing the Null Hypothesis of Stationarity against the Alternative of a Unit Root}.
+Journal of Econometrics, 54(1--3), 159--178.
+
+\bibitem{newey1987}
+Newey, W. K. y West, K. D. (1987).
+\emph{A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix}.
+Econometrica, 55(3), 703--708.
+
+\bibitem{ljung1978}
+Ljung, G. M. y Box, G. E. P. (1978).
+\emph{On a Measure of Lack of Fit in Time Series Models}.
+Biometrika, 65(2), 297--303.
+
+\bibitem{engle1982}
+Engle, R. F. (1982).
+\emph{Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation}.
+Econometrica, 50(4), 987--1007.
+
+\bibitem{box2015}
+Box, G. E. P., Jenkins, G. M., Reinsel, G. C. y Ljung, G. M. (2015).
+\emph{Time Series Analysis: Forecasting and Control}. 5.ª ed. Wiley.
+
+\bibitem{hyndman2021}
+Hyndman, R. J. y Athanasopoulos, G. (2021).
+\emph{Forecasting: Principles and Practice}. 3.ª ed. OTexts.
+
+\bibitem{hamilton1994}
+Hamilton, J. D. (1994).
+\emph{Time Series Analysis}. Princeton University Press.
+
+\end{thebibliography}
+
+\appendix
+
+\section{Reproducibilidad}
+
+\begin{verbatim}
+python -m src.scraping.historico --tipo eeff --desde 2019-01 --hasta 2025-12
+python -m src.etl.pipeline
+python -m src.models.pipeline
+python -m src.export.exportador
+python -m pytest -q
+\end{verbatim}
+
+Los artefactos principales son \texttt{data/processed/panel\_indicadores.parquet}, \texttt{dashboard/data.json}, \texttt{dashboard/data.js} y \texttt{data/processed/modelos\_meta.json}.
+
+\end{document}

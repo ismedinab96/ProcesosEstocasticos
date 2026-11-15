@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Datos (los crudos se versionan solo si se decide; por defecto ignorados)
+data/raw/*
+!data/raw/.gitkeep
+data/interim/
+data/processed/
+
+# Dashboard generado
+dashboard/data.json
+dashboard/data.js
+
+# Sistema
+.DS_Store
+Thumbs.db
