@@ -69,24 +69,24 @@
   <main>
     <section id="inicio" class="hero">
       <div>
-        <div class="eyebrow">Lectura estocástica de EEFF bancarios</div>
-        <h1>Cuando el dato se sale de su <span>proceso generador</span>.</h1>
+        <div class="eyebrow">Observatorio de procesos estocásticos · ASFI</div>
+        <h1>¿Cuándo un banco se sale de su <span>comportamiento normal</span>?</h1>
         <p class="lede">
-          Un tablero analítico sobre 84 meses de estados financieros de bancos múltiples publicados por ASFI.
-          Combina estacionariedad, regresión HAC, SARIMA, cadenas de Markov y un motor determinista de señales
-          para describir desviaciones observadas, no para anticipar quiebras.
+          Analizamos <strong>7 años de datos oficiales</strong> (84 meses, 12 bancos de Bolivia) para detectar
+          cuándo un indicador financiero rompe su patrón histórico habitual. Funciona como un chequeo estadístico
+          de señales tempranas: <strong>mide desviaciones, no predice quiebras</strong>.
         </p>
         <div class="disclaimer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M12 3 2.8 20h18.4L12 3Z" stroke-linejoin="round"></path>
             <path d="M12 9v5M12 17.2v.2" stroke-linecap="round"></path>
           </svg>
-          <span><strong>Descargo metodológico:</strong> el sistema mide desviaciones estocásticas y anomalías en indicadores financieros. No predice insolvencias ni quiebras bancarias.</span>
+          <span><strong>Para tener claro en la defensa:</strong> una alerta roja significa que el dato actual se alejó de su propio historial estadístico, no que el banco vaya a quebrar.</span>
         </div>
         <div class="meta-row">
           <span class="pill">Fuente <strong id="meta-source">ASFI Bolivia</strong></span>
-          <span class="pill">Rango <strong id="meta-range">—</strong></span>
-          <span class="pill">Observaciones <strong id="meta-obs">—</strong></span>
+          <span class="pill">Período <strong id="meta-range">—</strong></span>
+          <span class="pill">Registros <strong id="meta-obs">—</strong></span>
           <span class="pill" id="meta-mode">Modo <strong>—</strong></span>
         </div>
       </div>
@@ -102,15 +102,15 @@
           </div>
           <div class="hero-hero-number" style="margin-top: 22px">
             <strong id="hero-score">0,00</strong>
-            <span>score de anomalía</span>
+            <span>nivel de anomalía reciente (0 = normal, 5 = muy atípico)</span>
           </div>
           <div class="score-track" style="margin-top: 10px"><span id="hero-score-track"></span></div>
         </div>
         <div>
           <p id="hero-summary" class="hero-summary">Seleccione un banco en el radar para actualizar la lectura.</p>
           <div class="meta-row" style="margin-top: 12px">
-            <span class="pill">Cobertura <strong id="hero-coverage">—</strong></span>
-            <span class="pill">Mora final <strong id="hero-mora">—</strong></span>
+            <span class="pill">Historial <strong id="hero-coverage">—</strong></span>
+            <span class="pill">Mora actual <strong id="hero-mora">—</strong></span>
           </div>
         </div>
       </aside>
@@ -118,30 +118,73 @@
 
     <section id="kpis" class="kpi-grid" aria-label="Indicadores clave">
       <article class="kpi-card glass">
-        <div class="kpi-label"><span>Score de anomalía</span><span id="kpi-score-rank">—</span></div>
+        <div class="kpi-label"><span>¿Qué tan atípico está?</span><span id="kpi-score-rank">—</span></div>
         <div id="kpi-score" class="kpi-value">0,00</div>
         <div id="kpi-score-sub" class="kpi-sub">—</div>
       </article>
       <article class="kpi-card glass">
-        <div class="kpi-label"><span id="kpi-current-label">Indicador actual</span><span>último dato</span></div>
+        <div class="kpi-label"><span id="kpi-current-label">Indicador actual</span><span>último mes</span></div>
         <div id="kpi-current" class="kpi-value">—</div>
         <div id="kpi-current-sub" class="kpi-sub">—</div>
       </article>
       <article class="kpi-card glass">
-        <div class="kpi-label"><span>Pronóstico 6m</span><span>media SARIMA</span></div>
+        <div class="kpi-label"><span>¿A dónde apunta en 6m?</span><span>proyección</span></div>
         <div id="kpi-forecast" class="kpi-value">—</div>
         <div id="kpi-forecast-sub" class="kpi-sub">—</div>
       </article>
       <article class="kpi-card glass">
-        <div class="kpi-label"><span>Meses de cobertura</span><span>muestra</span></div>
+        <div class="kpi-label"><span>Meses analizados</span><span>sin huecos</span></div>
         <div id="kpi-coverage" class="kpi-value">—</div>
         <div id="kpi-coverage-sub" class="kpi-sub">—</div>
       </article>
       <article class="kpi-card glass">
-        <div class="kpi-label"><span>Backtest vs Naive</span><span>RMSE</span></div>
+        <div class="kpi-label"><span>¿Le gana a lo simple?</span><span>vs Naive</span></div>
         <div id="kpi-backtest" class="kpi-value">—</div>
         <div id="kpi-backtest-sub" class="kpi-sub">—</div>
       </article>
+    </section>
+
+    <nav class="report-nav" aria-label="Navegación rápida">
+      <a href="#como-funciona"><span class="report-nav-num">01</span> Cómo funciona</a>
+      <a href="#bancos"><span class="report-nav-num">02</span> Semáforo de bancos</a>
+      <a href="#analisis"><span class="report-nav-num">03</span> Lectura simple y gráfica</a>
+      <a href="#diagnostico"><span class="report-nav-num">04</span> Pruebas estadísticas</a>
+      <a href="#markov"><span class="report-nav-num">05</span> Estados de mora (Markov)</a>
+      <a href="#resultados"><span class="report-nav-num">06</span> Guía para la defensa</a>
+      <a href="#alertas"><span class="report-nav-num">07</span> Alertas activadas</a>
+    </nav>
+
+    <section id="como-funciona" class="story-shell glass" aria-labelledby="story-title">
+      <div class="story-head">
+        <div>
+          <span class="section-kicker">Explicación sin tecnicismos</span>
+          <h2 id="story-title">¿Cómo funciona este observatorio en 4 pasos?</h2>
+        </div>
+        <span class="pill">Haz clic en cada paso</span>
+      </div>
+      <div class="story-steps" role="tablist" aria-label="Pasos del proyecto">
+        <button class="story-step active" type="button" data-story-step="0" role="tab" aria-selected="true">
+          <span class="story-step-num">Paso 1</span>
+          <span class="story-step-title">Limpiamos datos oficiales</span>
+        </button>
+        <button class="story-step" type="button" data-story-step="1" role="tab" aria-selected="false">
+          <span class="story-step-num">Paso 2</span>
+          <span class="story-step-title">Aprendemos su ritmo normal</span>
+        </button>
+        <button class="story-step" type="button" data-story-step="2" role="tab" aria-selected="false">
+          <span class="story-step-num">Paso 3</span>
+          <span class="story-step-title">Vemos si puede cambiar de estado</span>
+        </button>
+        <button class="story-step" type="button" data-story-step="3" role="tab" aria-selected="false">
+          <span class="story-step-num">Paso 4</span>
+          <span class="story-step-title">Prendemos alertas claras</span>
+        </button>
+      </div>
+      <div id="story-panel" class="story-panel" aria-live="polite">
+        <h3 id="story-panel-title">1. Recolectamos y verificamos 84 meses oficiales de la ASFI</h3>
+        <p id="story-panel-body">Descargamos los balances mensuales de los 12 bancos múltiples entre 2019 y 2025 (1.008 registros). Verificamos que en todos los meses se cumpla la ecuación contable (Activo = Pasivo + Patrimonio) con 0 errores, y calculamos 7 indicadores clave como mora, liquidez y rentabilidad.</p>
+        <p id="story-panel-analogy" class="story-analogy">Analogía: antes de hacer un diagnóstico médico, revisamos que la báscula y el termómetro estén bien calibrados.</p>
+      </div>
     </section>
 
     <section id="bancos" class="section" aria-labelledby="bancos-title">
@@ -159,9 +202,30 @@
       <div class="section-head">
         <div>
           <span class="section-kicker">Serie seleccionada</span>
-          <h2 id="analisis-title">Trayectoria, ajuste y pronóstico</h2>
+          <h2 id="analisis-title">Lectura simple y trayectoria en el tiempo</h2>
         </div>
         <p id="analysis-sub" class="section-note">—</p>
+      </div>
+
+      <div id="plain-verdict" class="plain-verdict glass" aria-live="polite">
+        <div class="plain-verdict-head">
+          <h3 id="pv-title">Resumen en palabras simples</h3>
+          <span id="pv-badge" class="badge">—</span>
+        </div>
+        <div class="plain-verdict-grid">
+          <div class="plain-verdict-item">
+            <strong>1. ¿Qué mide este número?</strong>
+            <p id="pv-what">—</p>
+          </div>
+          <div class="plain-verdict-item">
+            <strong>2. ¿Está dentro de lo normal?</strong>
+            <p id="pv-normal">—</p>
+          </div>
+          <div class="plain-verdict-item">
+            <strong>3. ¿Qué dice la cadena de estados?</strong>
+            <p id="pv-markov">—</p>
+          </div>
+        </div>
       </div>
 
       <div class="chart-layout">
@@ -288,7 +352,7 @@
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
             <div>
               <h3>Regresión HAC</h3>
-              <p>Tendencia + dummies mensuales</p>
+              <p>¿Cuánto explica la tendencia y el mes?</p>
             </div>
             <span id="ols-badge" class="badge">—</span>
           </div>
@@ -301,13 +365,14 @@
               <tr><td>Tendencia</td><td id="ols-trend">—</td></tr>
             </tbody>
           </table>
+          <p id="ols-note" class="diag-plain">—</p>
         </article>
 
         <article class="diag-card glass">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
             <div>
-              <h3>SARIMA</h3>
-              <p>Selección por AIC, top 3</p>
+              <h3>Modelo SARIMA</h3>
+              <p>Patrón aprendido de meses y años previos</p>
             </div>
             <span id="sarima-badge" class="badge">—</span>
           </div>
@@ -321,6 +386,7 @@
             </tbody>
           </table>
           <div id="sarima-top3" class="top3"></div>
+          <p id="sarima-note" class="diag-plain">—</p>
         </article>
 
         <article class="diag-card glass">
@@ -394,6 +460,34 @@
               <tr><td>Propiedad de Markov</td><td id="markov-ok">—</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultados" class="section" aria-labelledby="resultados-title">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Guía para la defensa · Sin tecnicismos</span>
+          <h2 id="resultados-title">Qué hicimos y qué obtuvimos (resumen global)</h2>
+        </div>
+        <p class="section-note">
+          Haz clic en cada tema para ver cómo explicarlo fácilmente ante cualquier público. El detalle matemático formal está en <code>docs/informe_final.tex</code>.
+        </p>
+      </div>
+
+      <div class="academic-card glass">
+        <div class="defense-tabs" role="tablist" aria-label="Temas de la defensa">
+          <button class="defense-tab active" type="button" data-defense-tab="0" role="tab" aria-selected="true">1. Datos y limpieza</button>
+          <button class="defense-tab" type="button" data-defense-tab="1" role="tab" aria-selected="false">2. ¿Las series son estables?</button>
+          <button class="defense-tab" type="button" data-defense-tab="2" role="tab" aria-selected="false">3. ¿Le gana a lo simple?</button>
+          <button class="defense-tab" type="button" data-defense-tab="3" role="tab" aria-selected="false">4. Estados de mora (Markov)</button>
+          <button class="defense-tab" type="button" data-defense-tab="4" role="tab" aria-selected="false">5. Las 1.073 alertas</button>
+        </div>
+
+        <div id="defense-panel" class="story-panel" style="margin-top: 0" aria-live="polite">
+          <h3 id="defense-title">84 meses oficiales de la ASFI, 12 bancos y 0 errores contables</h3>
+          <p id="defense-body">Tomamos los estados financieros mensuales de los 12 bancos múltiples entre enero de 2019 y diciembre de 2025 (1.008 registros). Antes de modelar, comprobamos que en todos los meses cuadre el balance (Activo = Pasivo + Patrimonio) con cero fallos. Además, para calcular la rentabilidad (ROA y ROE), separamos la utilidad mes a mes porque la ASFI la publica acumulada desde enero.</p>
+          <p id="defense-takeaway" class="story-analogy">Idea clave para decir en la defensa: "No inventamos ni rellenamos datos; todo viene auditado desde los ZIP oficiales de la ASFI."</p>
         </div>
       </div>
     </section>

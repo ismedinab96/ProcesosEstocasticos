@@ -386,15 +386,67 @@
     $("analysis-sub").textContent = `${b.id.toUpperCase()} · ${ind().nombre} · ${s.fechas[0]} → ${s.pronostico.fechas[s.pronostico.fechas.length - 1]}`;
   }
 
+  const PLAIN_IND_DESC = {
+    mora: "Qué porcentaje de los préstamos del banco está atrasado. Mientras más alto, mayor riesgo.",
+    cobertura: "Cuánto respaldo (previsiones) tiene el banco para cubrir préstamos en mora. Mientras más alto, mejor protegido.",
+    liquidez: "Cuánto dinero disponible tiene el banco para responder a retiros rápidos. Mientras más alto, mayor holgura.",
+    roa: "Qué tanta ganancia genera el banco respecto a todo lo que administra (Activos).",
+    roe: "Qué tanta ganancia genera el banco respecto al capital propio de sus dueños (Patrimonio).",
+    crec_cartera: "Qué tan rápido crecen los préstamos otorgados frente al mismo mes del año anterior.",
+    crec_depositos: "Qué tan rápido crecen los depósitos del público frente al mismo mes del año anterior."
+  };
+
+  function renderPlainVerdict() {
+    const b = bank();
+    const indActual = ind();
+    const s = serie();
+    const m = DATA.markov[state.banco];
+    if (!$("pv-title")) return;
+
+    const lastVal = s.observado[s.observado.length - 1];
+    const lastZ = s.z_scores ? s.z_scores[s.z_scores.length - 1] : null;
+    const absZ = Number.isFinite(Number(lastZ)) ? Math.abs(Number(lastZ)) : 0;
+
+    $("pv-title").textContent = `${b.nombre} · ${indActual.nombre} en palabras simples`;
+    const isAtipico = absZ > 2;
+    setBadge($("pv-badge"), isAtipico ? "Fuera de su patrón" : "Dentro de lo esperado", isAtipico ? "warn" : "ok");
+
+    const desc = PLAIN_IND_DESC[state.indicador] || `Mide el comportamiento mensual de ${indActual.nombre}.`;
+    $("pv-what").textContent = `${desc} Hoy marca ${pct(lastVal)} (riesgo ${indActual.direccion_riesgo}).`;
+
+    if (absZ > 3) {
+      $("pv-normal").textContent = `No: el último dato está muy lejos de su rango habitual (z = ${signed(lastZ, 2)} desviaciones). Es una señal fuerte de cambio.`;
+    } else if (absZ > 2) {
+      $("pv-normal").textContent = `Está en el borde de vigilancia (z = ${signed(lastZ, 2)}). Se aleja un poco de lo que el modelo esperaba para este mes.`;
+    } else {
+      $("pv-normal").textContent = `Sí: el dato actual (${pct(lastVal)}) cae dentro de las bandas normales estimadas con su historia reciente.`;
+    }
+
+    if (m) {
+      const pCrit3 = m.prob_alcanzar_critica && Number.isFinite(Number(m.prob_alcanzar_critica["3"]))
+        ? m.prob_alcanzar_critica["3"] * 100
+        : 0;
+      $("pv-markov").textContent = `En mora, el banco está en estado “${m.estado_actual}”. Según su historial de transiciones, en 3 meses tiene ${num(pCrit3, 1)} % de probabilidad de estar en estado Crítica (≥ 4,0 %).`;
+    } else {
+      $("pv-markov").textContent = "Sin datos de transición de estados para esta entidad.";
+    }
+
+    if (state.motion && window.MotionLib) {
+      try {
+        window.MotionLib.animate($("plain-verdict"), { opacity: [0.65, 1], y: [4, 0] }, { duration: 0.28 });
+      } catch (e) { /* ignore */ }
+    }
+  }
+
   function renderInterpretation() {
     const s = serie();
     const b = bank();
     const e = s.estacionariedad;
     const sa = s.sarima;
     const bt = s.backtest;
-    $("how-read").textContent = "La línea sólida es el dato observado; la punteada muestra el ajuste dentro de la muestra. Las bandas 80 % y 95 % son intervalos de predicción: describen incertidumbre del proceso estimado, no certezas.";
-    $("finding").textContent = `${b.id.toUpperCase()} · ${ind().nombre}: ADF p = ${pText(e.adf_pval)} y KPSS p = ${pText(e.kpss_pval)}, veredicto “${e.veredicto}”. El SARIMA seleccionado es ${orderText(sa.orden)}${seasonText(sa.orden_estacional)} con AIC ${num(sa.aic, 2)}. En el backtest, RMSE = ${num(bt.rmse_modelo, 3)} frente a Naive = ${num(bt.rmse_naive, 3)}; ${bt.supera_baseline ? "supera" : "no supera"} al baseline.`;
-    $("limitation").textContent = "La banda de un paso usa la desviación estándar de los residuos como aproximación gaussiana. Un p-valor no mide la probabilidad de quiebra ni la magnitud económica del riesgo; la muestra de 84 meses limita la potencia de algunas pruebas.";
+    $("how-read").textContent = "La línea sólida es el dato real publicado por ASFI; la punteada es lo que el modelo esperaba. Si el dato real sale de las bandas sombreadas, significa que ocurrió algo fuera de su ritmo habitual.";
+    $("finding").textContent = `${b.id.toUpperCase()} · ${ind().nombre}: en palabras simples, el modelo ${orderText(sa.orden)}${seasonText(sa.orden_estacional)} ${bt.supera_baseline ? "sí logra predecir mejor" : "no supera"} a repetir el último dato (RMSE ${num(bt.rmse_modelo, 3)} vs ${num(bt.rmse_naive, 3)}).`;
+    $("limitation").textContent = "Las bandas asumen errores aproximadamente normales y se estiman con 84 meses de historia. Un aviso aquí señala un cambio estadístico, nunca una predicción de quiebra.";
   }
 
   function renderCurrent() {
@@ -402,6 +454,7 @@
     $("indicator-select").value = state.indicador;
     renderHero();
     renderKpis();
+    renderPlainVerdict();
     renderSeriesFacts();
     renderChartHeader();
     renderInterpretation();
@@ -883,6 +936,10 @@
     $("ols-trend").textContent = trend
       ? `t ${signed(trend.coef, 3)} · t² ${curvature ? signed(curvature.coef, 5) : "—"}`
       : "—";
+    if ($("ols-note")) {
+      const r2Pct = Math.max(0, Math.round(Number(ols.r2_adj || 0) * 100));
+      $("ols-note").textContent = `En palabras simples: la tendencia y el calendario explican cerca del ${r2Pct} % del movimiento. ${ols.dw_stat < 1.5 ? "Los meses siguen muy ligados entre sí (autocorrelación)." : "Los residuos no muestran fuerte dependencia inmediata."}`;
+    }
 
     setBadge($("sarima-badge"), `AIC ${num(sa.aic, 1)}`, "ok");
     $("sarima-order").textContent = orderText(sa.orden);
@@ -896,6 +953,12 @@
         <span>AIC ${num(m.aic, 1)}</span>
         <span>BIC ${num(m.bic, 1)}</span>
       </div>`).join("");
+    if ($("sarima-note")) {
+      const lbOk = Number(sa.ljung_box_pval) >= 0.05;
+      $("sarima-note").textContent = lbOk
+        ? "En palabras simples: el modelo capturó bien el patrón; lo que sobra (residuos) parece ruido aleatorio."
+        : "En palabras simples: aún queda algo de patrón sin explicar en los residuos (Ljung-Box < 0,05).";
+    }
 
     setBadge($("bt-badge"), bt.supera_baseline ? "Supera Naive" : "No supera Naive", bt.supera_baseline ? "ok" : "bad");
     $("bt-rmse").textContent = num(bt.rmse_modelo, 3);
@@ -1168,6 +1231,21 @@
     syncPills();
   }
 
+  function renderMath(container) {
+    if (!container || !window.renderMathInElement) return;
+    try {
+      window.renderMathInElement(container, {
+        delimiters: [
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false }
+        ],
+        throwOnError: false
+      });
+    } catch (error) {
+      return;
+    }
+  }
+
   function openGlossary() {
     const drawer = $("glossary");
     const backdrop = $("glossary-backdrop");
@@ -1175,19 +1253,7 @@
     drawer.setAttribute("aria-hidden", "false");
     backdrop.classList.add("open");
     document.body.style.overflow = "hidden";
-    if (window.renderMathInElement) {
-      try {
-        window.renderMathInElement($("glossary-body"), {
-          delimiters: [
-            { left: "\\[", right: "\\]", display: true },
-            { left: "\\(", right: "\\)", display: false }
-          ],
-          throwOnError: false
-        });
-      } catch (error) {
-        return;
-      }
-    }
+    renderMath($("glossary-body"));
   }
 
   function closeGlossary() {
@@ -1283,6 +1349,99 @@
     $("glossary-close").addEventListener("click", closeGlossary);
     $("glossary-backdrop").addEventListener("click", closeGlossary);
 
+    const STORY_STEPS = [
+      {
+        title: "1. Recolectamos y verificamos 84 meses oficiales de la ASFI",
+        body: "Descargamos los balances mensuales de los 12 bancos múltiples entre 2019 y 2025 (1.008 registros). Verificamos que en todos los meses se cumpla la ecuación contable (Activo = Pasivo + Patrimonio) con 0 errores, y calculamos 7 indicadores clave como mora, liquidez y rentabilidad.",
+        analogy: "Analogía: antes de hacer un diagnóstico médico, revisamos que la báscula y el termómetro estén bien calibrados."
+      },
+      {
+        title: "2. Aprendemos el ritmo normal de cada banco e indicador",
+        body: "Cada banco tiene su propia historia y estacionalidad (por ejemplo, cierres de fin de año). Con pruebas de estabilidad (ADF/KPSS) y modelos SARIMA, calculamos cuál debería ser el valor esperado mes a mes y una banda de tolerancia al 95 %.",
+        analogy: "Analogía: si tu temperatura normal es 36,5 °C y hoy marca 38,5 °C, el sistema avisa que algo cambió, aunque no diagnostique la enfermedad."
+      },
+      {
+        title: "3. Medimos la probabilidad de cambiar de estado (Markov)",
+        body: "Clasificamos la mora en 4 niveles (Baja, Media, Alta y Crítica) y contamos con qué frecuencia un banco pasa de un nivel a otro. Así estimamos si una mora alta es un tropiezo pasajero o una situación permanente.",
+        analogy: "Analogía: es como el pronóstico del clima por estados; si ayer llovió y casi siempre sigue lloviendo, la probabilidad de permanecer en lluvia es alta."
+      },
+      {
+        title: "4. Prendemos alertas transparentes y auditables",
+        body: "No usamos cajas negras. Una alerta se enciende solo si ocurre alguna de 5 reglas claras: salir de la banda esperada, residuo extremo (|z| > 2 o 3), racha de 3 meses empeorando, salto de estado de mora o acumulación sostenida (CUSUM).",
+        analogy: "Analogía: cinco luces de tablero en un auto que se encienden por reglas exactas que cualquiera puede verificar."
+      }
+    ];
+
+    document.querySelectorAll("[data-story-step]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.getAttribute("data-story-step"));
+        const item = STORY_STEPS[idx];
+        if (!item) return;
+        document.querySelectorAll("[data-story-step]").forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle("active", active);
+          b.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        $("story-panel-title").textContent = item.title;
+        $("story-panel-body").textContent = item.body;
+        $("story-panel-analogy").textContent = item.analogy;
+        if (state.motion && window.MotionLib) {
+          try {
+            window.MotionLib.animate($("story-panel"), { opacity: [0.4, 1], y: [8, 0] }, { duration: 0.28 });
+          } catch (e) { /* ignore */ }
+        }
+      });
+    });
+
+    const DEFENSE_TABS = [
+      {
+        title: "84 meses oficiales de la ASFI, 12 bancos y 0 errores contables",
+        body: "Tomamos los estados financieros mensuales de los 12 bancos múltiples entre enero de 2019 y diciembre de 2025 (1.008 registros). Antes de modelar, comprobamos que en todos los meses cuadre el balance (Activo = Pasivo + Patrimonio) con cero fallos. Además, para calcular la rentabilidad (ROA y ROE), separamos la utilidad mes a mes porque la ASFI la publica acumulada desde enero.",
+        takeaway: "Idea clave para decir en la defensa: \"No inventamos ni rellenamos datos; todo viene auditado desde los ZIP oficiales de la ASFI.\""
+      },
+      {
+        title: "79 de 84 series no son estables en niveles (y eso es normal)",
+        body: "Al aplicar las pruebas ADF y KPSS, 44 series salieron inconclusas, 35 con raíz unitaria pura y solo 5 estacionarias. Esto significa que los indicadores bancarios cambian de nivel con el tiempo y tienen estacionalidad anual. Por eso el modelo SARIMA más frecuente fue (0,1,2)(0,1,1)₁₂ (en 25 series), que diferencia la serie para volverla estable.",
+        takeaway: "Idea clave para decir en la defensa: \"Que salgan inconclusas en 84 meses es normal en finanzas; documentamos el resultado sin forzarlo.\""
+      },
+      {
+        title: "El modelo supera al sentido común (Naive) en 26 de 84 series",
+        body: "Probamos el modelo en los últimos 12 meses comparándolo contra el método más simple posible: asumir que el próximo mes será igual al mes actual (Naive). El SARIMA ganó en 26 de 84 series (sobre todo en Liquidez: 7/12 y Mora: 6/12). En indicadores muy lentos como crecimiento de depósitos (0/12), repetir el último mes es muy difícil de vencer.",
+        takeaway: "Idea clave para decir en la defensa: \"Reportamos con honestidad los 58 casos donde no supera al Naive; por eso no dependemos solo de predecir, sino de 5 señales combinadas.\""
+      },
+      {
+        title: "Cadenas de Markov: caso bfort vs. el resto del sistema",
+        body: "La prueba estadística confirmó que el modelo de 1 paso (orden 1) es válido en los 12 bancos (p ≈ 1). El hallazgo más claro es bfort (mora 5,76 %): su distribución de largo plazo asigna 99,5 % al estado Crítica, lo que muestra una situación estructuralmente alta, no un salto repentino. En contraste, bisa (21 %), bnb (9,3 %) y bme (8,9 %) tienen probabilidades moderadas.",
+        takeaway: "Idea clave para decir en la defensa: \"Markov nos permite distinguir entre un banco que siempre está en mora alta (bfort) y uno que recién empeoró.\""
+      },
+      {
+        title: "1.073 alertas históricas explicables y 5 semáforos rojos actuales",
+        body: "En todo el historial se activaron 1.073 alertas (268 críticas, 213 de alerta y 592 de vigilancia; 18 en los últimos 3 meses). La señal más común fue la racha de deterioro (651 veces), seguida de salir de la banda del 95 % (275). Al cierre, 5 bancos quedaron en rojo (bfort, bun, bec, bisa, bsol), 1 en naranja (bcr), 2 en amarillo y 4 en verde.",
+        takeaway: "Idea clave para decir en la defensa: \"Un semáforo rojo como bsol no significa que tenga mora crítica, sino que sus otros indicadores tuvieron desviaciones recientes.\""
+      }
+    ];
+
+    document.querySelectorAll("[data-defense-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.getAttribute("data-defense-tab"));
+        const item = DEFENSE_TABS[idx];
+        if (!item) return;
+        document.querySelectorAll("[data-defense-tab]").forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle("active", active);
+          b.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        $("defense-title").textContent = item.title;
+        $("defense-body").textContent = item.body;
+        $("defense-takeaway").textContent = item.takeaway;
+        if (state.motion && window.MotionLib) {
+          try {
+            window.MotionLib.animate($("defense-panel"), { opacity: [0.4, 1], y: [8, 0] }, { duration: 0.28 });
+          } catch (e) { /* ignore */ }
+        }
+      });
+    });
+
     document.addEventListener("keydown", (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -1303,5 +1462,7 @@
 
   bindEvents();
   updateProgress();
+  renderMath(document.querySelector("main"));
+  window.addEventListener("load", () => renderMath(document.querySelector("main")));
   window.setTimeout(setupMotion, 0);
 })();
