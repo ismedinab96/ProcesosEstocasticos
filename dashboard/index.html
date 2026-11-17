@@ -1,624 +1,143 @@
-<!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<!doctype html>
+<html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Dashboard académico de alerta temprana estocástica sobre estados financieros de bancos múltiples de Bolivia publicados por ASFI.">
-  <title>Observatorio Estocástico ASFI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-  <link rel="stylesheet" href="assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vigía · Monitor de bancos</title>
+<style>
+:root{--paper:#F4F6F8;--card:#fff;--ink:#14232F;--mute:#5B6B78;--line:#DDE3E8;--acc:#0F6E7A;--ok:#2F855A;--warn:#B7791F;--hot:#C0462B;--okbg:#E6F3EC;--warnbg:#FBF1DC;--hotbg:#F9E6E1;--serif:Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+header{position:sticky;top:0;z-index:5;background:rgba(244,246,248,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{max-width:980px;margin:auto;padding:12px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{font:700 22px var(--serif);letter-spacing:-.01em;margin-right:auto}
+.brand small{font:400 13px var(--sans);color:var(--mute);margin-left:8px}
+nav{display:flex;gap:4px}
+nav button,.tog{border:0;background:none;padding:8px 14px;border-radius:99px;font-weight:600;color:var(--mute)}
+nav button.on{background:var(--ink);color:#fff}
+.tog{border:1px solid var(--line);background:var(--card);font-weight:500;display:flex;gap:8px;align-items:center}
+.tog i{width:30px;height:18px;border-radius:9px;background:var(--line);position:relative;transition:background .2s}
+.tog i:after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s}
+.tog[aria-pressed=true] i{background:var(--acc)}.tog[aria-pressed=true] i:after{left:14px}
+main{max-width:980px;margin:auto;padding:32px 20px 24px}
+h1{font:700 clamp(28px,5vw,44px)/1.12 var(--serif);letter-spacing:-.02em;margin:0 0 10px;max-width:20em}
+.lead{color:var(--mute);max-width:42em;margin:0 0 28px}
+.chip{display:inline-block;padding:3px 11px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap}
+.ok{background:var(--okbg);color:var(--ok)}.warn{background:var(--warnbg);color:var(--warn)}.hot{background:var(--hotbg);color:var(--hot)}
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:grid;grid-template-columns:1fr 100px 150px;gap:16px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:16px 20px}
+.row:last-child{border:0}.row:hover{background:#F8FAFB}
+.row>span:last-child{text-align:right}.row b{display:block;font-size:17px}.row small{color:var(--mute);font-size:14px}
+.sc{font:13px var(--sans);color:var(--mute);margin-left:8px}
+.back{border:0;background:none;color:var(--acc);font-weight:600;padding:0;margin-bottom:14px}
+.head{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.head h1{margin:0;font-size:clamp(26px,4vw,36px)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px}
+.chips button{border:1px solid var(--line);background:var(--card);padding:6px 14px;border-radius:99px;font-size:14px}
+.chips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:16px}
+.big{font:700 clamp(40px,8vw,64px)/1 var(--serif);letter-spacing:-.03em}
+.big span{font-size:.45em;color:var(--mute);margin-left:4px}
+.say{font-size:18px;margin:10px 0 0;max-width:36em}
+svg.ch{width:100%;height:auto;display:block;margin-top:18px}
+.leg{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:8px}
+.leg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+h2{font:700 20px var(--serif);margin:0 0 6px}
+.panel p{margin:6px 0;color:#2b3b47}
+details{margin-top:12px;color:var(--mute);font-size:14px}summary{cursor:pointer;color:var(--acc);font-weight:600}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:10px 0 0;font-size:14px}dt{color:var(--mute)}dd{margin:0}
+.exp{border-style:dashed;background:#FBFCFD}
+.fil{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.al{padding:14px 20px;border-bottom:1px solid var(--line)}.al:last-child{border:0}
+.al small{color:var(--mute);display:block;margin-top:4px}
+.more{display:block;margin:18px auto 0;border:1px solid var(--line);background:var(--card);padding:10px 22px;border-radius:99px;font-weight:600}
+footer{max-width:980px;margin:auto;padding:8px 20px 40px;color:var(--mute);font-size:13px}
+@media(max-width:620px){.row{grid-template-columns:1fr auto}.row svg{display:none}.bar{gap:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
 </head>
 <body>
-  <div id="demo-banner" class="demo-banner hidden">Procesos Estocasticos DAT-262</div>
-  <div id="reading-progress" class="reading-progress" aria-hidden="true"></div>
+<header><div class="bar" id="top"></div></header>
+<main id="app"></main>
+<footer>Vigía describe cuándo un indicador se aleja de lo habitual para cada banco. No predice quiebras ni es una calificación de solvencia. Fuente: estados financieros de bancos múltiples, ASFI Bolivia.</footer>
+<script src="data.js"></script>
+<script>
+const D=window.ASFI_DATA,B=Object.fromEntries(D.bancos.map(b=>[b.id,b])),I=Object.fromEntries(D.indicadores_meta.map(i=>[i.id,i]));
+const f=(v,d=2)=>v==null?'–':v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const fecha=s=>{const[a,m]=s.split('-');return MES[+m-1]+' '+a};
+const ST={verde:['Normal','ok'],amarillo:['Observar','warn'],naranja:['Observar','warn'],rojo:['Inusual','hot']};
+const SV={vigilancia:['Para observar','warn'],alerta:['Atención','warn'],critica:['Muy inusual','hot']};
+const chip=(t,c)=>`<span class="chip ${c}">${t}</span>`;
+let S={view:'resumen',bank:null,ind:'mora',exp:false,sev:'todas',lim:25};
 
-  <header class="dock">
-    <div class="dock-inner">
-      <a class="brand" href="#inicio" aria-label="Observatorio Estocástico ASFI">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M3 17.5 8.2 12l3.4 3.4L21 5.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M15.5 5.8H21v5.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3 21h18" stroke-linecap="round" opacity=".45"/>
-          </svg>
-        </span>
-        <span class="brand-copy">
-          <span class="brand-kicker">ASFI · Riesgo estocástico</span>
-          <span class="brand-title">Procesos Estocasticos DAT-262</span>
-        </span>
-      </a>
+function read(s){
+  const p=s&&s.prediccion_un_paso;if(!s||!p||!p.ic95_inf)return null;
+  const n=s.observado.length-1,v=s.observado[n],lo=p.ic95_inf[n],hi=p.ic95_sup[n];
+  const pos=v>hi?'up':v<lo?'down':'in',worse=(pos=='up'&&s.direccion_riesgo=='ascendente')||(pos=='down'&&s.direccion_riesgo=='descendente');
+  return{v,lo,hi,pos,worse};
+}
+const verdict=r=>r.pos=='in'?'dentro de lo normal':r.worse?'peor de lo esperado':'mejor de lo esperado';
+function spark(a,w=96,h=28){
+  const mn=Math.min(...a),mx=Math.max(...a),k=i=>[i*(w-2)/(a.length-1)+1,h-3-(a[i]-mn)/((mx-mn)||1)*(h-6)];
+  return`<svg width="${w}" height="${h}" aria-hidden="true"><polyline fill="none" stroke="#0F6E7A" stroke-width="1.8" points="${a.map((_,i)=>k(i).join(',')).join(' ')}"/></svg>`;
+}
+function chart(s){
+  const N=48,o=s.observado.slice(-N),pp=s.prediccion_un_paso,lo=pp?pp.ic95_inf.slice(-N):[],hi=pp?pp.ic95_sup.slice(-N):[],fc=s.pronostico,m=fc?fc.media.length:0;
+  const all=[...o,...lo,...hi,...(fc?[...fc.ic95_inf,...fc.ic95_sup]:[])].filter(x=>x!=null),mn=Math.min(...all),mx=Math.max(...all);
+  const W=900,H=300,L=44,R=10,T=10,Bt=26,X=i=>L+i*(W-L-R)/(N+m-1),Y=v=>T+(mx-v)/((mx-mn)||1)*(H-T-Bt);
+  const band=(a,b,off)=>{const u=a.map((v,i)=>[X(i+off),Y(b[i])]),d=a.map((v,i)=>[X(i+off),Y(v)]).reverse();return[...u,...d].map(p=>p.join(',')).join(' ')};
+  const line=(a,off)=>a.map((v,i)=>[X(i+off),Y(v)].join(',')).join(' ');
+  let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución del indicador con su rango esperado">`;
+  for(let t=0;t<=4;t++){const v=mn+(mx-mn)*t/4;g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#E7ECF0"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="#5B6B78">${f(v,1)}</text>`}
+  if(lo.length)g+=`<polygon points="${band(lo,hi,0)}" fill="#0F6E7A" opacity=".13"/>`;
+  if(m){g+=`<polygon points="${band(fc.ic95_inf,fc.ic95_sup,N)}" fill="#B7791F" opacity=".16"/><polyline fill="none" stroke="#B7791F" stroke-width="2" stroke-dasharray="6 5" points="${line(fc.media,N)}"/>`}
+  g+=`<polyline fill="none" stroke="#14232F" stroke-width="2.4" points="${line(o,0)}"/><circle cx="${X(N-1)}" cy="${Y(o[N-1])}" r="5" fill="#14232F"/>`;
+  const ds=s.fechas.slice(-N);[0,12,24,36,47].forEach(i=>g+=`<text x="${X(i)}" y="${H-6}" text-anchor="middle" font-size="12" fill="#5B6B78">${fecha(ds[i])}</text>`);
+  return g+'</svg>'+`<div class="leg"><span><i style="background:#14232F"></i>Dato real</span><span><i style="background:#0F6E7A;opacity:.3"></i>Rango esperado</span>${m?'<span><i style="background:#B7791F;opacity:.5"></i>Pronóstico (próximos 12 meses)</span>':''}</div>`;
+}
+const RF=[...new Set(D.alertas.map(a=>a.fecha))].sort().reverse().slice(0,3);
+function bankSentence(b){const r=read(D.series[b.id].mora),k=D.alertas.filter(a=>a.banco_id==b.id&&RF.includes(a.fecha)).length;
+  const m=r?`Mora ${f(r.v)} %: ${verdict(r)}.`:`Mora ${f(b.sparkline_mora.at(-1))} %.`;
+  return m+(k?` ${k} ${k==1?'aviso':'avisos'} en los últimos 3 meses.`:' Sin avisos recientes.')}
 
-      <div class="dock-controls">
-        <div class="control">
-          <label for="bank-select">Banco</label>
-          <select id="bank-select" aria-label="Seleccionar banco"></select>
-        </div>
-        <div class="control">
-          <label for="indicator-select">Indicador</label>
-          <select id="indicator-select" aria-label="Seleccionar indicador"></select>
-        </div>
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"></circle>
-            <path d="m20 20-3.5-3.5" stroke-linecap="round"></path>
-          </svg>
-          <input id="dock-search" type="search" placeholder="Buscar alertas" aria-label="Buscar alertas" autocomplete="off">
-          <kbd>Ctrl K</kbd>
-        </div>
-        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Cambiar tema">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.8 6.8 0 0 0 9.8 9.8Z" stroke-linejoin="round"></path>
-          </svg>
-          <span id="theme-label">Tema</span>
-        </button>
-        <button id="glossary-open" class="icon-btn" type="button" aria-label="Abrir glosario">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" stroke-linejoin="round"></path>
-            <path d="M8 7h8M8 11h6" stroke-linecap="round"></path>
-          </svg>
-          <span>Glosario</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <section id="inicio" class="hero">
-      <div>
-        <div class="eyebrow">Observatorio de procesos estocásticos · ASFI</div>
-        <h1>¿Cuándo un banco se sale de su <span>comportamiento normal</span>?</h1>
-        <p class="lede">
-          Analizamos <strong>7 años de datos oficiales</strong> (84 meses, 12 bancos de Bolivia) para detectar
-          cuándo un indicador financiero rompe su patrón histórico habitual. Funciona como un chequeo estadístico
-          de señales tempranas: <strong>mide desviaciones, no predice quiebras</strong>.
-        </p>
-        <div class="disclaimer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M12 3 2.8 20h18.4L12 3Z" stroke-linejoin="round"></path>
-            <path d="M12 9v5M12 17.2v.2" stroke-linecap="round"></path>
-          </svg>
-          <span><strong>Para tener claro en la defensa:</strong> una alerta roja significa que el dato actual se alejó de su propio historial estadístico, no que el banco vaya a quebrar.</span>
-        </div>
-        <div class="meta-row">
-          <span class="pill">Fuente <strong id="meta-source">ASFI Bolivia</strong></span>
-          <span class="pill">Período <strong id="meta-range">—</strong></span>
-          <span class="pill">Registros <strong id="meta-obs">—</strong></span>
-          <span class="pill" id="meta-mode">Modo <strong>—</strong></span>
-        </div>
-      </div>
-
-      <aside class="hero-panel glass" aria-label="Resumen del banco seleccionado">
-        <div>
-          <div class="hero-panel-top">
-            <div>
-              <h2 id="hero-bank" class="hero-bank">—</h2>
-              <p id="hero-sub" class="hero-sub">—</p>
-            </div>
-            <div id="hero-status"></div>
-          </div>
-          <div class="hero-hero-number" style="margin-top: 22px">
-            <strong id="hero-score">0,00</strong>
-            <span>nivel de anomalía reciente (0 = normal, 5 = muy atípico)</span>
-          </div>
-          <div class="score-track" style="margin-top: 10px"><span id="hero-score-track"></span></div>
-        </div>
-        <div>
-          <p id="hero-summary" class="hero-summary">Seleccione un banco en el radar para actualizar la lectura.</p>
-          <div class="meta-row" style="margin-top: 12px">
-            <span class="pill">Historial <strong id="hero-coverage">—</strong></span>
-            <span class="pill">Mora actual <strong id="hero-mora">—</strong></span>
-          </div>
-        </div>
-      </aside>
-    </section>
-
-    <section id="kpis" class="kpi-grid" aria-label="Indicadores clave">
-      <article class="kpi-card glass">
-        <div class="kpi-label"><span>¿Qué tan atípico está?</span><span id="kpi-score-rank">—</span></div>
-        <div id="kpi-score" class="kpi-value">0,00</div>
-        <div id="kpi-score-sub" class="kpi-sub">—</div>
-      </article>
-      <article class="kpi-card glass">
-        <div class="kpi-label"><span id="kpi-current-label">Indicador actual</span><span>último mes</span></div>
-        <div id="kpi-current" class="kpi-value">—</div>
-        <div id="kpi-current-sub" class="kpi-sub">—</div>
-      </article>
-      <article class="kpi-card glass">
-        <div class="kpi-label"><span>¿A dónde apunta en 6m?</span><span>proyección</span></div>
-        <div id="kpi-forecast" class="kpi-value">—</div>
-        <div id="kpi-forecast-sub" class="kpi-sub">—</div>
-      </article>
-      <article class="kpi-card glass">
-        <div class="kpi-label"><span>Meses analizados</span><span>sin huecos</span></div>
-        <div id="kpi-coverage" class="kpi-value">—</div>
-        <div id="kpi-coverage-sub" class="kpi-sub">—</div>
-      </article>
-      <article class="kpi-card glass">
-        <div class="kpi-label"><span>¿Le gana a lo simple?</span><span>vs Naive</span></div>
-        <div id="kpi-backtest" class="kpi-value">—</div>
-        <div id="kpi-backtest-sub" class="kpi-sub">—</div>
-      </article>
-    </section>
-
-    <nav class="report-nav" aria-label="Navegación rápida">
-      <a href="#como-funciona"><span class="report-nav-num">01</span> Cómo funciona</a>
-      <a href="#bancos"><span class="report-nav-num">02</span> Semáforo de bancos</a>
-      <a href="#analisis"><span class="report-nav-num">03</span> Lectura simple y gráfica</a>
-      <a href="#diagnostico"><span class="report-nav-num">04</span> Pruebas estadísticas</a>
-      <a href="#markov"><span class="report-nav-num">05</span> Estados de mora (Markov)</a>
-      <a href="#resultados"><span class="report-nav-num">06</span> Guía para la defensa</a>
-      <a href="#alertas"><span class="report-nav-num">07</span> Alertas activadas</a>
-    </nav>
-
-    <section id="como-funciona" class="story-shell glass" aria-labelledby="story-title">
-      <div class="story-head">
-        <div>
-          <span class="section-kicker">Explicación sin tecnicismos</span>
-          <h2 id="story-title">¿Cómo funciona este observatorio en 4 pasos?</h2>
-        </div>
-        <span class="pill">Haz clic en cada paso</span>
-      </div>
-      <div class="story-steps" role="tablist" aria-label="Pasos del proyecto">
-        <button class="story-step active" type="button" data-story-step="0" role="tab" aria-selected="true">
-          <span class="story-step-num">Paso 1</span>
-          <span class="story-step-title">Limpiamos datos oficiales</span>
-        </button>
-        <button class="story-step" type="button" data-story-step="1" role="tab" aria-selected="false">
-          <span class="story-step-num">Paso 2</span>
-          <span class="story-step-title">Aprendemos su ritmo normal</span>
-        </button>
-        <button class="story-step" type="button" data-story-step="2" role="tab" aria-selected="false">
-          <span class="story-step-num">Paso 3</span>
-          <span class="story-step-title">Vemos si puede cambiar de estado</span>
-        </button>
-        <button class="story-step" type="button" data-story-step="3" role="tab" aria-selected="false">
-          <span class="story-step-num">Paso 4</span>
-          <span class="story-step-title">Prendemos alertas claras</span>
-        </button>
-      </div>
-      <div id="story-panel" class="story-panel" aria-live="polite">
-        <h3 id="story-panel-title">1. Recolectamos y verificamos 84 meses oficiales de la ASFI</h3>
-        <p id="story-panel-body">Descargamos los balances mensuales de los 12 bancos múltiples entre 2019 y 2025 (1.008 registros). Verificamos que en todos los meses se cumpla la ecuación contable (Activo = Pasivo + Patrimonio) con 0 errores, y calculamos 7 indicadores clave como mora, liquidez y rentabilidad.</p>
-        <p id="story-panel-analogy" class="story-analogy">Analogía: antes de hacer un diagnóstico médico, revisamos que la báscula y el termómetro estén bien calibrados.</p>
-      </div>
-    </section>
-
-    <section id="bancos" class="section" aria-labelledby="bancos-title">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">Radar de entidades</span>
-          <h2 id="bancos-title">Mapa de semáforos y mora reciente</h2>
-        </div>
-        <p class="section-note">Cada tarjeta resume el score del banco y sus últimos 24 meses de mora. Haga clic para sincronizar todo el tablero.</p>
-      </div>
-      <div id="bank-grid" class="bank-grid"></div>
-    </section>
-
-    <section id="analisis" class="section" aria-labelledby="analisis-title">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">Serie seleccionada</span>
-          <h2 id="analisis-title">Lectura simple y trayectoria en el tiempo</h2>
-        </div>
-        <p id="analysis-sub" class="section-note">—</p>
-      </div>
-
-      <div id="plain-verdict" class="plain-verdict glass" aria-live="polite">
-        <div class="plain-verdict-head">
-          <h3 id="pv-title">Resumen en palabras simples</h3>
-          <span id="pv-badge" class="badge">—</span>
-        </div>
-        <div class="plain-verdict-grid">
-          <div class="plain-verdict-item">
-            <strong>1. ¿Qué mide este número?</strong>
-            <p id="pv-what">—</p>
-          </div>
-          <div class="plain-verdict-item">
-            <strong>2. ¿Está dentro de lo normal?</strong>
-            <p id="pv-normal">—</p>
-          </div>
-          <div class="plain-verdict-item">
-            <strong>3. ¿Qué dice la cadena de estados?</strong>
-            <p id="pv-markov">—</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="chart-layout">
-        <div class="chart-card glass">
-          <div class="chart-toolbar">
-            <div>
-              <h3 class="panel-title" id="chart-title">—</h3>
-              <p class="panel-sub" id="chart-sub">—</p>
-            </div>
-            <div class="segmented" id="chart-tabs" role="tablist" aria-label="Vistas de la serie">
-              <span class="seg-pill" id="chart-pill" aria-hidden="true"></span>
-              <button class="seg-btn active" type="button" data-chart-tab="serie" role="tab" aria-selected="true">Serie</button>
-              <button class="seg-btn" type="button" data-chart-tab="residuos" role="tab" aria-selected="false">Residuos</button>
-              <button class="seg-btn" type="button" data-chart-tab="diagnostico" role="tab" aria-selected="false">Diagnóstico</button>
-            </div>
-          </div>
-
-          <div id="stage-serie" class="chart-stage">
-            <div class="chart-wrap"><canvas id="chart-serie"></canvas></div>
-            <div id="legend-serie" class="chart-legend">
-              <span class="legend-item"><i class="swatch"></i>Observado</span>
-              <span class="legend-item"><i class="swatch dashed"></i>Ajuste SARIMA</span>
-              <span class="legend-item"><i class="swatch forecast"></i>Pronóstico</span>
-              <span class="legend-item"><i class="swatch band"></i>Bandas 80 % / 95 %</span>
-            </div>
-          </div>
-
-          <div id="stage-residuos" class="chart-stage hidden">
-            <div class="chart-wrap"><canvas id="chart-residuos"></canvas></div>
-            <div class="chart-legend">
-              <span class="legend-item"><i class="swatch" style="background: var(--red)"></i>|z| &gt; 3</span>
-              <span class="legend-item"><i class="swatch" style="background: var(--orange)"></i>|z| &gt; 2</span>
-              <span class="legend-item"><i class="swatch dashed"></i>Banda de vigilancia ±2</span>
-            </div>
-          </div>
-
-          <div id="stage-diagnostico" class="chart-stage hidden">
-            <div class="diag-stage">
-              <div class="diag-chart">
-                <h4>ACF original</h4>
-                <div class="chart-wrap"><canvas id="chart-acf"></canvas></div>
-              </div>
-              <div class="diag-chart">
-                <h4>PACF original</h4>
-                <div class="chart-wrap"><canvas id="chart-pacf"></canvas></div>
-              </div>
-              <div class="diag-chart">
-                <h4>Q-Q normal</h4>
-                <div class="chart-wrap"><canvas id="chart-qq"></canvas></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <aside class="side-stack">
-          <div class="mini-panel glass">
-            <h3 id="series-facts-title">Ficha de la serie</h3>
-            <p id="series-facts-text">—</p>
-            <div class="metric-grid">
-              <div class="metric"><span>Media</span><strong id="fact-mean">—</strong></div>
-              <div class="metric"><span>Varianza</span><strong id="fact-var">—</strong></div>
-              <div class="metric"><span>Observaciones</span><strong id="fact-obs">—</strong></div>
-              <div class="metric"><span>Modelos AIC</span><strong id="fact-models">—</strong></div>
-            </div>
-          </div>
-          <div class="mini-panel glass">
-            <h3>Lectura Markov</h3>
-            <p id="side-markov-text">—</p>
-            <div class="metric-grid">
-              <div class="metric"><span>Estado actual</span><strong id="side-state">—</strong></div>
-              <div class="metric"><span>P(Crítica 3m)</span><strong id="side-crit">—</strong></div>
-            </div>
-          </div>
-          <div id="alert-detail" class="alert-detail hidden"></div>
-        </aside>
-      </div>
-
-      <div class="interp-grid">
-        <article class="interp">
-          <h4>Cómo leer esta gráfica</h4>
-          <p id="how-read">—</p>
-        </article>
-        <article class="interp">
-          <h4>Hallazgo estadístico actual</h4>
-          <p id="finding">—</p>
-        </article>
-        <article class="interp">
-          <h4>Limitación metodológica</h4>
-          <p id="limitation">—</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="diagnostico" class="section" aria-labelledby="diag-title">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">Evidencia econométrica</span>
-          <h2 id="diag-title">Diagnóstico de la serie seleccionada</h2>
-        </div>
-        <p class="section-note">Los valores se actualizan con el banco y el indicador activos. Los p-valores se muestran con precisión de tres decimales.</p>
-      </div>
-
-      <div class="diag-grid">
-        <article class="diag-card glass">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div>
-              <h3>Estacionariedad</h3>
-              <p>ADF + KPSS con rezagos automáticos</p>
-            </div>
-            <span id="diag-verdict" class="badge">—</span>
-          </div>
-          <table class="diag-table">
-            <tbody>
-              <tr><td>ADF p-valor</td><td id="diag-adf">—</td></tr>
-              <tr><td>KPSS p-valor</td><td id="diag-kpss">—</td></tr>
-              <tr><td>d recomendado</td><td id="diag-d">—</td></tr>
-              <tr><td>D estacional</td><td id="diag-ds">—</td></tr>
-            </tbody>
-          </table>
-          <p id="diag-note" style="margin-top:8px">—</p>
-        </article>
-
-        <article class="diag-card glass">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div>
-              <h3>Regresión HAC</h3>
-              <p>¿Cuánto explica la tendencia y el mes?</p>
-            </div>
-            <span id="ols-badge" class="badge">—</span>
-          </div>
-          <table class="diag-table">
-            <tbody>
-              <tr><td>R² ajustado</td><td id="ols-r2">—</td></tr>
-              <tr><td>Durbin-Watson</td><td id="ols-dw">—</td></tr>
-              <tr><td>Ljung-Box p</td><td id="ols-lb">—</td></tr>
-              <tr><td>ARCH-LM p</td><td id="ols-arch">—</td></tr>
-              <tr><td>Tendencia</td><td id="ols-trend">—</td></tr>
-            </tbody>
-          </table>
-          <p id="ols-note" class="diag-plain">—</p>
-        </article>
-
-        <article class="diag-card glass">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div>
-              <h3>Modelo SARIMA</h3>
-              <p>Patrón aprendido de meses y años previos</p>
-            </div>
-            <span id="sarima-badge" class="badge">—</span>
-          </div>
-          <table class="diag-table">
-            <tbody>
-              <tr><td>Orden (p,d,q)</td><td id="sarima-order">—</td></tr>
-              <tr><td>Estacional (P,D,Q)₁₂</td><td id="sarima-seasonal">—</td></tr>
-              <tr><td>AIC</td><td id="sarima-aic">—</td></tr>
-              <tr><td>BIC</td><td id="sarima-bic">—</td></tr>
-              <tr><td>Ljung-Box p</td><td id="sarima-lb">—</td></tr>
-            </tbody>
-          </table>
-          <div id="sarima-top3" class="top3"></div>
-          <p id="sarima-note" class="diag-plain">—</p>
-        </article>
-
-        <article class="diag-card glass">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-            <div>
-              <h3>Backtest walk-forward</h3>
-              <p>Últimos 12 meses, ventana expansiva</p>
-            </div>
-            <span id="bt-badge" class="badge">—</span>
-          </div>
-          <table class="diag-table">
-            <tbody>
-              <tr><td>RMSE modelo</td><td id="bt-rmse">—</td></tr>
-              <tr><td>MAE modelo</td><td id="bt-mae">—</td></tr>
-              <tr><td>sMAPE modelo</td><td id="bt-smape">—</td></tr>
-              <tr><td>RMSE Naive</td><td id="bt-naive">—</td></tr>
-              <tr><td>RMSE Seasonal Naive</td><td id="bt-snaive">—</td></tr>
-            </tbody>
-          </table>
-          <p id="bt-note" style="margin-top:8px">—</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="markov" class="section" aria-labelledby="markov-title">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">Cadena de Markov</span>
-          <h2 id="markov-title">Transiciones de mora y horizonte simulado</h2>
-        </div>
-        <p class="section-note">Cuatro estados con umbrales 1,5 % / 2,5 % / 4,0 %. El slider eleva la matriz de transición a la potencia h en tiempo real.</p>
-      </div>
-
-      <div class="markov-layout">
-        <div class="matrix-card glass">
-          <div class="matrix-head">
-            <div>
-              <h3 id="matrix-title">Matriz de transición</h3>
-              <p>Pase el cursor por una celda para iluminar su fila y columna de origen y destino.</p>
-            </div>
-            <span id="markov-prop" class="badge">—</span>
-          </div>
-          <div id="markov-matrix" class="matrix-grid" role="grid" aria-label="Matriz de transición de Markov"></div>
-          <div class="matrix-note">
-            <span>Origen en filas, destino en columnas.</span>
-            <span id="markov-aggregate">—</span>
-          </div>
-        </div>
-
-        <div class="markov-side glass">
-          <div>
-            <h3>Estado y distribución</h3>
-            <p id="markov-state-note">—</p>
-          </div>
-          <div class="current-state">
-            <span>Estado actual</span>
-            <strong id="markov-current">—</strong>
-          </div>
-          <div class="dist-bars" id="markov-dist"></div>
-          <div>
-            <div class="slider-head">
-              <span>Horizonte de simulación</span>
-              <strong id="horizon-label">3 meses</strong>
-            </div>
-            <input id="horizon" type="range" min="0" max="4" step="1" value="2" aria-label="Horizonte de simulación">
-          </div>
-          <div class="dist-bars" id="markov-crit"></div>
-          <table class="diag-table">
-            <tbody>
-              <tr><td>Prueba orden 1 vs 2</td><td id="markov-test">—</td></tr>
-              <tr><td>Propiedad de Markov</td><td id="markov-ok">—</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="resultados" class="section" aria-labelledby="resultados-title">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">Guía para la defensa · Sin tecnicismos</span>
-          <h2 id="resultados-title">Qué hicimos y qué obtuvimos (resumen global)</h2>
-        </div>
-        <p class="section-note">
-          Haz clic en cada tema para ver cómo explicarlo fácilmente ante cualquier público. El detalle matemático formal está en <code>docs/informe_final.tex</code>.
-        </p>
-      </div>
-
-      <div class="academic-card glass">
-        <div class="defense-tabs" role="tablist" aria-label="Temas de la defensa">
-          <button class="defense-tab active" type="button" data-defense-tab="0" role="tab" aria-selected="true">1. Datos y limpieza</button>
-          <button class="defense-tab" type="button" data-defense-tab="1" role="tab" aria-selected="false">2. ¿Las series son estables?</button>
-          <button class="defense-tab" type="button" data-defense-tab="2" role="tab" aria-selected="false">3. ¿Le gana a lo simple?</button>
-          <button class="defense-tab" type="button" data-defense-tab="3" role="tab" aria-selected="false">4. Estados de mora (Markov)</button>
-          <button class="defense-tab" type="button" data-defense-tab="4" role="tab" aria-selected="false">5. Las 1.073 alertas</button>
-        </div>
-
-        <div id="defense-panel" class="story-panel" style="margin-top: 0" aria-live="polite">
-          <h3 id="defense-title">84 meses oficiales de la ASFI, 12 bancos y 0 errores contables</h3>
-          <p id="defense-body">Tomamos los estados financieros mensuales de los 12 bancos múltiples entre enero de 2019 y diciembre de 2025 (1.008 registros). Antes de modelar, comprobamos que en todos los meses cuadre el balance (Activo = Pasivo + Patrimonio) con cero fallos. Además, para calcular la rentabilidad (ROA y ROE), separamos la utilidad mes a mes porque la ASFI la publica acumulada desde enero.</p>
-          <p id="defense-takeaway" class="story-analogy">Idea clave para decir en la defensa: "No inventamos ni rellenamos datos; todo viene auditado desde los ZIP oficiales de la ASFI."</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="alertas" class="section" aria-labelledby="alertas-title">
-      <div class="section-head">
-        <div>
-          <span class="section-kicker">Motor determinista</span>
-          <h2 id="alertas-title">Alertas activadas</h2>
-        </div>
-        <p class="section-note">Cinco señales: banda de predicción 95 %, residuo |z|, racha de deterioro, salto de estado y CUSUM. Haga clic en una fila para inspeccionar el mes.</p>
-      </div>
-
-      <div class="alerts-panel glass">
-        <div class="alerts-toolbar">
-          <div class="search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <circle cx="11" cy="11" r="7"></circle>
-              <path d="m20 20-3.5-3.5" stroke-linecap="round"></path>
-            </svg>
-            <input id="alert-search" type="search" placeholder="Buscar banco, indicador o explicación" aria-label="Buscar alertas" autocomplete="off">
-          </div>
-          <div id="sev-tabs" class="sev-tabs" role="tablist" aria-label="Filtrar por severidad">
-            <button class="sev-btn active" type="button" data-sev="todas" role="tab" aria-selected="true">Todas</button>
-            <button class="sev-btn" type="button" data-sev="critica" role="tab" aria-selected="false">Crítica</button>
-            <button class="sev-btn" type="button" data-sev="alerta" role="tab" aria-selected="false">Alerta</button>
-            <button class="sev-btn" type="button" data-sev="vigilancia" role="tab" aria-selected="false">Vigilancia</button>
-          </div>
-          <label class="pill" style="cursor:pointer">
-            <input id="alert-only-bank" type="checkbox" style="accent-color: var(--accent)">
-            Solo banco activo
-          </label>
-          <span id="alert-total" class="pill">—</span>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Banco</th>
-                <th>Indicador</th>
-                <th>Severidad</th>
-                <th>z</th>
-                <th>Señales</th>
-                <th>Explicación</th>
-              </tr>
-            </thead>
-            <tbody id="alerts-body"></tbody>
-          </table>
-        </div>
-
-        <div class="table-foot">
-          <span id="alert-count">—</span>
-          <button id="load-more" class="icon-btn" type="button">Cargar más</button>
-        </div>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div>
-        <strong>Observatorio Estocástico ASFI</strong><br>
-        Elaborado por Iver Medina Balboa - Andres Espinoza Romero 
-      </div>
-      <div>
-        <strong>Descargo:</strong> Proyecto elaborado para la materia de Procesos Estocasticos DAT-262
-      </div>
-    </footer>
-  </main>
-
-  <div id="glossary-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
-  <aside id="glossary" class="drawer" aria-labelledby="glossary-title" aria-hidden="true">
-    <div class="drawer-head">
-      <h2 id="glossary-title">Glosario metodológico</h2>
-      <button id="glossary-close" class="icon-btn" type="button" aria-label="Cerrar glosario">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"></path>
-        </svg>
-      </button>
-    </div>
-    <div id="glossary-body" class="drawer-body">
-      <article class="glossary-item">
-        <h3>Estacionariedad</h3>
-        <p>Una serie es estacionaria en sentido débil si su media y su varianza son constantes y su autocovarianza depende solo del rezago. Es una condición clave para que un SARIMA tenga un proceso generador estable.</p>
-        <div class="glossary-formula">\[ \gamma(k)=\operatorname{Cov}(y_t,y_{t-k}),\quad \gamma(k)\ \text{no depende de }t \]</div>
-      </article>
-      <article class="glossary-item">
-        <h3>Raíz unitaria</h3>
-        <p>Indica que un choque tiene efectos persistentes y que la serie no vuelve por sí sola a un nivel medio. El contraste ADF plantea \(H_0\): raíz unitaria; el KPSS plantea \(H_0\): estacionariedad.</p>
-        <div class="glossary-formula">\[ y_t=\rho y_{t-1}+\varepsilon_t,\quad H_0:\rho=1 \]</div>
-      </article>
-      <article class="glossary-item">
-        <h3>SARIMA</h3>
-        <p>Modelo autorregresivo integrado de media móvil con componente estacional. Se denota \((p,d,q)(P,D,Q)_s\); aquí \(s=12\) por la periodicidad mensual.</p>
-        <div class="glossary-formula">\[ \phi(B)\Phi(B^{12})(1-B)^d(1-B^{12})^D y_t=\theta(B)\Theta(B^{12})\varepsilon_t \]</div>
-      </article>
-      <article class="glossary-item">
-        <h3>Intervalo de predicción</h3>
-        <p>Rango de valores compatible con la incertidumbre del modelo. Las bandas al 80 % y 95 % no son certezas: indican qué tan ancho es el abanico de trayectorias plausibles.</p>
-        <div class="glossary-formula">\[ \hat{y}_{t+h}\pm z_{1-\alpha/2}\,\hat{\sigma}_{h} \]</div>
-      </article>
-      <article class="glossary-item">
-        <h3>Cadena de Markov</h3>
-        <p>Proceso discreto donde la probabilidad del próximo estado depende solo del estado actual. La matriz \(P\) recoge \(P_{ij}=\Pr(X_{t+1}=j\mid X_t=i)\).</p>
-        <div class="glossary-formula">\[ \mathbf{P}=[P_{ij}],\quad \sum_{j}P_{ij}=1 \]</div>
-      </article>
-      <article class="glossary-item">
-        <h3>Distribución estacionaria</h3>
-        <p>Vector de probabilidad que permanece invariante al aplicar la transición. Resume la ocupación de largo plazo de los estados de mora.</p>
-        <div class="glossary-formula">\[ \boldsymbol{\pi}=\boldsymbol{\pi}\mathbf{P},\quad \sum_i \pi_i=1 \]</div>
-      </article>
-      <article class="glossary-item">
-        <h3>Valor p</h3>
-        <p>Probabilidad de observar un estadístico tan extremo como el calculado si la hipótesis nula fuera cierta. Un p-valor pequeño es evidencia contra \(H_0\), no una probabilidad de que \(H_0\) sea falsa.</p>
-        <div class="glossary-formula">\[ p=\Pr(\text{estadístico}\ge t_{\text{obs}}\mid H_0) \]</div>
-      </article>
-    </div>
-  </aside>
-
-  <div id="tooltip" class="tooltip" role="tooltip"></div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <script src="data.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-  <script type="module">
-    import { animate, stagger, inView, scroll } from "https://cdn.jsdelivr.net/npm/motion@11.11.13/+esm";
-    window.MotionLib = { animate, stagger, inView, scroll };
-    window.dispatchEvent(new Event("motion-ready"));
-  </script>
-  <script src="assets/app.js"></script>
+function topbar(){
+  document.getElementById('top').innerHTML=`<div class="brand">Vigía<small>Monitor de bancos</small></div><nav>${[['resumen','Resumen'],['avisos','Avisos']].map(([k,t])=>`<button data-go="${k}" class="${S.view==k||(k=='resumen'&&S.view=='banco')?'on':''}">${t}</button>`).join('')}</nav><button class="tog" data-exp aria-pressed="${S.exp}"><i></i>Modo experto</button>`;
+}
+function resumen(){
+  const bs=[...D.bancos].sort((a,b)=>b.score_anomalia-a.score_anomalia),n=bs.filter(b=>b.semaforo=='rojo').length,f1=D.meta.rango_fechas[1];
+  return`<h1>${n} de ${bs.length} bancos muestran movimientos inusuales</h1><p class="lead">Datos hasta ${fecha(f1)}. “Inusual” significa que un indicador se alejó de lo habitual para ese banco. No significa que el banco esté en peligro. Toca un banco para ver el detalle.</p><div class="list">${bs.map(b=>{const[t,c]=ST[b.semaforo];return`<button class="row" data-bank="${b.id}"><span><b>${b.nombre}</b><small>${bankSentence(b)}</small></span>${spark(b.sparkline_mora)}<span>${chip(t,c)}${S.exp?`<span class="sc">score ${f(b.score_anomalia)}</span>`:''}</span></button>`}).join('')}</div>`;
+}
+function banco(){
+  const b=B[S.bank],s=D.series[b.id][S.ind],m=I[S.ind],u=m.unidad||'',r=read(s),[t,c]=ST[b.semaforo],mk=D.markov.por_banco[b.id];
+  let h=`<button class="back" data-go="resumen">← Todos los bancos</button><div class="head"><h1>${b.nombre}</h1>${chip(t,c)}</div><div class="chips">${D.indicadores_meta.map(i=>`<button data-ind="${i.id}" class="${i.id==S.ind?'on':''}">${i.nombre}</button>`).join('')}</div>`;
+  h+=`<div class="panel"><div class="big">${f(s.observado.at(-1))}<span>${u}</span></div>`;
+  h+=r?`<p class="say">Esperábamos entre ${f(r.lo)} y ${f(r.hi)} ${u}. Está ${verdict(r)}.</p>`:`<p class="say">No hay suficientes datos para estimar un rango esperado.</p>`;
+  h+=chart(s);
+  if(s.backtest){const ok=s.backtest.supera_baseline;h+=`<p><b>Confianza del pronóstico: ${ok?'aceptable':'baja'}.</b> ${ok?'En una prueba con los últimos 12 meses, superó a un método simple.':'En una prueba con los últimos 12 meses, un método simple (repetir el último dato) acertó más. Úsalo como referencia, no como cifra firme.'}</p>`}
+  h+=`<details><summary>¿Cómo leer este gráfico?</summary><p>La línea oscura es el dato real de cada mes. La franja azul es el rango en que el historial hacía esperar el dato. Si la línea sale de la franja, el mes fue inusual. La zona ámbar es el pronóstico para el próximo año.</p></details></div>`;
+  if(S.ind=='mora'&&mk){
+    const e=D.markov.estados,u2=D.markov.umbrales.map(x=>x*100),k=mk.estado_actual,rg=['menos de '+f(u2[0],1)+' %','entre '+f(u2[0],1)+' % y '+f(u2[1],1)+' %','entre '+f(u2[1],1)+' % y '+f(u2[2],1)+' %','más de '+f(u2[2],1)+' %'];
+    h+=`<div class="panel"><h2>¿En qué nivel de mora está y cuánto suele durar?</h2><p>Hoy está en nivel <b>${e[k]}</b> (${rg[k]}). Históricamente, este banco se queda unos <b>${f(mk.tiempo_permanencia_meses[k],0)} meses</b> en ese nivel antes de cambiar.</p><p>Probabilidad de estar en nivel Crítica dentro de 3 meses: <b>${f(mk.prob_critico_h.m3*100,0)} %</b>; dentro de 6 meses: <b>${f(mk.prob_critico_h.m6*100,0)} %</b>. Es una descripción de su comportamiento pasado, no un pronóstico de quiebra.</p></div>`}
+  if(S.exp){const a=s.estacionariedad||{},q=s.sarima||{},bt=s.backtest||{};
+    h+=`<div class="panel exp"><h2>Detalle técnico</h2><dl><dt>Estacionariedad</dt><dd>${a.veredicto||'–'} (ADF p=${f(a.adf_pval,3)}, KPSS p=${f(a.kpss_pval,3)})</dd><dt>Diferenciación</dt><dd>d=${a.d_recomendado??'–'}, D=${a.D_estacional??'–'}</dd><dt>Modelo SARIMA</dt><dd>${q.orden?`(${q.orden.join(',')})(${q.orden_estacional.join(',')}) · AIC ${f(q.aic,1)}`:'–'}</dd><dt>RMSE modelo / Naive</dt><dd>${f(bt.rmse_modelo,3)} / ${f(bt.rmse_naive,3)}</dd><dt>Score de anomalía</dt><dd>${f(b.score_anomalia)}</dd></dl></div>`}
+  return h;
+}
+function avisos(){
+  const fs=[...new Set(D.alertas.map(a=>a.fecha))].sort().reverse().slice(0,6),min=fs.at(-1);
+  const all=D.alertas.filter(a=>a.fecha>=min).sort((a,b)=>b.fecha.localeCompare(a.fecha)),L=all.filter(a=>S.sev=='todas'||a.severidad==S.sev),v=L.slice(0,S.lim);
+  return`<h1>Avisos de los últimos 6 meses</h1><p class="lead">Cada aviso indica qué indicador de qué banco se movió de forma inusual y por qué. Son ${all.length} en total desde ${fecha(min)}.</p><div class="fil chips">${[['todas','Todos'],['critica','Muy inusuales'],['alerta','Atención'],['vigilancia','Para observar']].map(([k,t])=>`<button data-sev="${k}" class="${S.sev==k?'on':''}">${t}</button>`).join('')}</div><div class="list">${v.map(a=>{const[t,c]=SV[a.severidad];return`<div class="al">${chip(t,c)} <b>${B[a.banco_id]?.nombre||a.banco_id}</b> · ${I[a.indicador_id]?.nombre||a.indicador_id}<small>${fecha(a.fecha)}. ${a.explicacion_clara.split(': ').slice(1).join(': ')}</small></div>`}).join('')||'<div class="al">No hay avisos con este filtro.</div>'}</div>${L.length>v.length?`<button class="more" data-more>Ver más avisos (${L.length-v.length})</button>`:''}`;
+}
+function render(){topbar();document.getElementById('app').innerHTML=S.view=='banco'?banco():S.view=='avisos'?avisos():resumen();}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-go],[data-bank],[data-ind],[data-sev],[data-exp],[data-more]');if(!t)return;
+  if(t.dataset.go){S.view=t.dataset.go}else if(t.dataset.bank){S.view='banco';S.bank=t.dataset.bank}else if(t.dataset.ind){S.ind=t.dataset.ind}else if(t.dataset.sev){S.sev=t.dataset.sev;S.lim=25}else if('exp' in t.dataset){S.exp=!S.exp}else if('more' in t.dataset){S.lim+=25}
+  render();if(t.dataset.go||t.dataset.bank)scrollTo(0,0);
+});
+render();
+</script>
 </body>
 </html>
