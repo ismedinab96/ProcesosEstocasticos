@@ -400,7 +400,8 @@
     const b = bank();
     const indActual = ind();
     const s = serie();
-    const m = DATA.markov[state.banco];
+    const pb = DATA.markov && DATA.markov.por_banco;
+    const m = pb ? pb[state.banco] : null;
     if (!$("pv-title")) return;
 
     const lastVal = s.observado[s.observado.length - 1];
@@ -423,10 +424,12 @@
     }
 
     if (m) {
-      const pCrit3 = m.prob_alcanzar_critica && Number.isFinite(Number(m.prob_alcanzar_critica["3"]))
-        ? m.prob_alcanzar_critica["3"] * 100
+      const estados = DATA.markov.estados || ["Baja", "Media", "Alta", "Crítica"];
+      const estadoNombre = estados[m.estado_actual] || "—";
+      const pCrit3 = m.prob_critico_h && Number.isFinite(Number(m.prob_critico_h.m3))
+        ? m.prob_critico_h.m3 * 100
         : 0;
-      $("pv-markov").textContent = `En mora, el banco está en estado “${m.estado_actual}”. Según su historial de transiciones, en 3 meses tiene ${num(pCrit3, 1)} % de probabilidad de estar en estado Crítica (≥ 4,0 %).`;
+      $("pv-markov").textContent = `En mora, el banco está en estado “${estadoNombre}”. Según su historial de transiciones, en 3 meses tiene ${num(pCrit3, 1)} % de probabilidad de estar en estado Crítica (≥ 4,0 %).`;
     } else {
       $("pv-markov").textContent = "Sin datos de transición de estados para esta entidad.";
     }
